@@ -34,7 +34,7 @@ function Landing() {
       {/* header */}
       <header className="ghead">
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <a href="index.html" style={{ textDecoration: "none" }}><Wordmark size={22} arc /></a>
+          <a href="index.html" style={{ textDecoration: "none" }}><Wordmark size={22} arc overlap ballPass /></a>
         </div>
         <nav>
           <a href="index.html">Home</a>
@@ -156,7 +156,7 @@ function Landing() {
       {/* footer */}
       <footer data-mode="ink" style={{ background: "var(--bg)", color: "var(--fg)", borderTop: "1px solid var(--hair)", padding: "72px 0 60px", textAlign: "center" }}>
         <div className="wrap" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-          <Wordmark size={"clamp(38px,8vw,72px)"} arc />
+          <Wordmark size={"clamp(38px,8vw,72px)"} arc overlap ballPass />
           <span style={{ fontFamily: "var(--script)", fontSize: 32, color: "var(--orange)", lineHeight: .8, marginTop: -6 }}>arts</span>
           <p style={{ fontSize: 14, color: "var(--fg-dim)", maxWidth: "44ch", lineHeight: 1.6 }}>
             Alleyoop Arts is a Canadian basketball art and culture brand. Founded by Damion

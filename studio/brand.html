@@ -116,6 +116,10 @@
   .wm .rim.pass{ } /* left O */
   .wm .rim.finish{ } /* right O */
   .wm.twopart .rim.finish{ border-color:var(--orange); }
+  .wm.oo-overlap .oo{ gap:0; }
+  .wm.oo-overlap .rim.finish{ margin-left:-.32em; z-index:1; }
+  .wm.oo-overlap .rim.pass{ z-index:3; }
+  .wm.oo-overlap .oo-ball{ z-index:3; }
   /* overlapping OO — the two rims fuse like the monogram (pass + finish, one play) */
   .wm.oo-overlap .oo,
   .doc.overlap-oo .wm .oo{ gap:0; }

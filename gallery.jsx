@@ -74,7 +74,7 @@ function Gallery() {
       {/* header */}
       <header className="ghead">
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <a href="index.html" style={{ textDecoration: "none" }}><Wordmark size={22} arc /></a>
+          <a href="index.html" style={{ textDecoration: "none" }}><Wordmark size={22} arc overlap ballPass /></a>
           <span className="mono-label" style={{ marginLeft: 2 }}>The Collection</span>
         </div>
         <nav>
@@ -136,7 +136,7 @@ function Gallery() {
       {/* footer */}
       <footer data-mode="ink" style={{ background: "var(--bg)", color: "var(--fg)", borderTop: "1px solid var(--hair)", padding: "64px 0 56px", textAlign: "center" }}>
         <div className="wrap" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-          <Wordmark size={"clamp(34px,7vw,62px)"} arc />
+          <Wordmark size={"clamp(34px,7vw,62px)"} arc overlap ballPass />
           <span style={{ fontFamily: "var(--script)", fontSize: 30, color: "var(--orange)", lineHeight: .8, marginTop: -6 }}>arts</span>
           <p style={{ fontSize: 14, color: "var(--fg-dim)", maxWidth: "40ch", lineHeight: 1.6 }}>The gallery for the game. Limited-edition prints from a catalog of 156 originals.</p>
           <div className="mono-label" style={{ marginTop: 8 }}>The pass is the play · Est. 2026</div>

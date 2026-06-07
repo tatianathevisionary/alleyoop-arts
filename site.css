@@ -28,6 +28,11 @@ body{ margin:0; }
 .wm .oo{ position:relative; display:inline-flex; align-items:center; gap:.012em; margin:0 .006em; }
 .wm .rim{ position:relative; display:inline-block; width:.78em; height:.78em; border-radius:50%; border:.118em solid var(--rim); box-sizing:border-box; top:.012em; }
 .wm.twopart .rim.finish{ border-color:var(--orange); }
+/* overlapping OO — the monogram move. Left O (the ball) sits ON TOP of the cream O behind it. */
+.wm.oo-overlap .oo{ gap:0; }
+.wm.oo-overlap .rim.finish{ margin-left:-.32em; z-index:1; }
+.wm.oo-overlap .rim.pass{ z-index:3; }
+.wm.oo-overlap .oo-ball{ z-index:3; }
 .wm .arc{ position:absolute; left:-6%; top:-44%; width:112%; height:62%; overflow:visible; pointer-events:none; }
 .wm .arc path{ fill:none; stroke:var(--orange); }
 .wm .arc circle{ fill:var(--orange); }

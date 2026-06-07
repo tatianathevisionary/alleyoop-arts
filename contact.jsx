@@ -34,7 +34,7 @@ function Contact() {
     <div className="doc" data-mode={mode}>
       <header className="ghead">
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <a href="index.html" style={{ textDecoration: "none" }}><Wordmark size={22} arc /></a>
+          <a href="index.html" style={{ textDecoration: "none" }}><Wordmark size={22} arc overlap ballPass /></a>
           <span className="mono-label" style={{ marginLeft: 2 }}>Contact</span>
         </div>
         <nav>
@@ -135,7 +135,7 @@ function Contact() {
       {/* footer */}
       <footer className="section" style={{ paddingBottom: 64 }}>
         <div className="wrap" style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 24, alignItems: "center" }}>
-          <Wordmark size={20} arc />
+          <Wordmark size={20} arc overlap ballPass />
           <div style={{ display: "flex", gap: 22, flexWrap: "wrap" }}>
             <a href="gallery.html" style={navLink}>The Collection</a>
             <a href="shop.html" style={navLink}>Shop</a>

@@ -54,7 +54,7 @@ function About() {
     <div className="doc" data-mode={mode}>
       <header className="ghead">
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <a href="index.html" style={{ textDecoration: "none" }}><Wordmark size={22} arc /></a>
+          <a href="index.html" style={{ textDecoration: "none" }}><Wordmark size={22} arc overlap ballPass /></a>
           <span className="mono-label" style={{ marginLeft: 2 }}>About</span>
         </div>
         <nav>

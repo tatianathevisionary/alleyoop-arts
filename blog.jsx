@@ -9,6 +9,7 @@ const POSTS = [
     title: "The pass is the play",
     section: "Manifesto",
     date: "June 2026",
+    img: "art/08-perfect-pass.png",
     dek: "Basketball has always been more than a game. The way it gets covered rarely treats it that way. Alleyoop Arts exists to fix that.",
     md: `Basketball has always been more than a game. It's the court that holds a neighborhood together, the route a kid maps for their whole life, the art form played at full speed. But the way it gets covered — stats, highlights, hot takes — rarely treats it that way.
 
@@ -37,6 +38,7 @@ This is what Canadian basketball looks like right now. We're building it a galle
     title: "The quote that was itself a pass",
     section: "The Assist Files",
     date: "June 2026",
+    img: "art/10-vibrant.png",
     dek: "The most famous quote about passing is misquoted — and borrowed. A 21-year-old caught it in his second language and finished.",
     md: `You've seen the quote. It's on posters, in captions, in every "basketball wisdom" thread ever assembled:
 
@@ -75,6 +77,7 @@ An assist only counts if you know who threw it.`,
     title: "The maze has no shortcuts",
     section: "The Maze · A letter from the founder",
     date: "June 2026",
+    img: "art/01-alley-runner.png",
     dek: "I was seventeen when I left Pickering for Phoenix. One suitcase, one reason. What followed wasn't a highlight reel — it was a maze.",
     md: `*A letter from the founder.*
 
@@ -108,6 +111,7 @@ I didn't quit basketball. I passed it to the person I was becoming. He's the one
     title: "No is better than maybe",
     section: "The Maze",
     date: "June 2026",
+    img: "art/03-the-call.png",
     dek: "Canada Basketball drew a line on the road to LA28: full commitment or none. The maybe is the most expensive answer in the building.",
     md: `On June 1st, Canada Basketball announced its roster direction for the road to LA28, and two things happened at once. Shai Gilgeous-Alexander said yes. Jamal Murray said no.
 
@@ -140,6 +144,7 @@ You cannot run an alley-oop with someone who might be there when the ball comes 
     title: "Most basketball quotes are fake. We checked.",
     section: "The Assist Files",
     date: "June 2026",
+    img: "art/02-hoop.png",
     dek: "We traced 29 of the internet's most shared basketball quotes to a primary source. Ten survived. Here's the field report.",
     md: `We pulled 29 of the most shared basketball quotes on the internet — the ones on posters, in graduation speeches, tattooed on forearms — and tried to trace each one to a primary source. An interview with a date. A press conference with a transcript. A book with a page number.
 
@@ -206,7 +211,7 @@ function Blog() {
   const Header = () => (
     <header className="ghead">
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-        <a href="index.html" style={{ textDecoration: "none" }}><Wordmark size={22} arc /></a>
+        <a href="index.html" style={{ textDecoration: "none" }}><Wordmark size={22} arc overlap ballPass /></a>
         <span className="mono-label" style={{ marginLeft: 2 }}>Journal</span>
       </div>
       <nav>
@@ -227,7 +232,7 @@ function Blog() {
   const Footer = () => (
     <footer data-mode="ink" style={{ background: "var(--bg)", color: "var(--fg)", borderTop: "1px solid var(--hair)", padding: "64px 0 56px", textAlign: "center" }}>
       <div className="wrap" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-        <Wordmark size={"clamp(34px,7vw,62px)"} arc />
+        <Wordmark size={"clamp(34px,7vw,62px)"} arc overlap ballPass />
         <span style={{ fontFamily: "var(--script)", fontSize: 30, color: "var(--orange)", lineHeight: .8, marginTop: -6 }}>arts</span>
         <div className="mono-label" style={{ marginTop: 8 }}>The pass is the play · Est. 2026</div>
       </div>
