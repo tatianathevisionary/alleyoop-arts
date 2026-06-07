@@ -81,6 +81,7 @@ function Gallery() {
           <a href="#grid">Works</a>
           <a href="shop.html">Shop</a>
           <a href="about.html">About</a>
+          <a href="contact.html">Contact</a>
           <a href="3d/gallery-space.html">The Gallery — Live</a>
         </nav>
         <div className="modeswitch" role="group" aria-label="Mode">

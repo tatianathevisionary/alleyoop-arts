@@ -61,6 +61,7 @@ function About() {
           <a href="#story">Story</a>
           <a href="gallery.html">The Collection</a>
           <a href="shop.html">Shop</a>
+          <a href="contact.html">Contact</a>
           <a href="3d/gallery-space.html">The Gallery — Live</a>
         </nav>
         <div className="modeswitch" role="group" aria-label="Mode">
