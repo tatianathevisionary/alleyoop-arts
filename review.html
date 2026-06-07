@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALLEYOOP ARTS — Collection Review</title>
+<meta name="robots" content="noindex">
+<style>
+  :root {
+    --ink: #0E0E0E;
+    --cream: #F2E9C7;
+    --orange: #EE9933;
+    --teal: #223333;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: "Helvetica Neue", Helvetica, Inter, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- header ---------- */
+  header {
+    padding: 56px 5vw 36px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .wordmark {
+    font-size: clamp(2.4rem, 7vw, 5rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 0.04em;
+  }
+  .wordmark .rim {
+    display: inline-block;
+    width: 0.78em; height: 0.78em;
+    border: 0.09em solid var(--ink);
+    border-radius: 50%;
+    margin: 0 0.02em;
+    position: relative;
+    top: 0.04em;
+  }
+  .wordmark .rim.finish { border-color: var(--orange); }
+  .sub {
+    margin-top: 10px;
+    font-size: 0.95rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .sub em { font-style: normal; color: var(--orange); }
+
+  /* ---------- stats ---------- */
+  .stats {
+    display: flex;
+    flex-wrap: wrap;
+    border-bottom: 2px solid var(--ink);
+  }
+  .stat {
+    flex: 1 1 160px;
+    padding: 22px 5vw 22px;
+    border-right: 1px solid var(--ink);
+  }
+  .stat:last-child { border-right: none; }
+  .stat b { display: block; font-size: 2rem; font-weight: 800; }
+  .stat span { font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase; }
+
+  /* ---------- verdict ---------- */
+  .verdict {
+    padding: 30px 5vw;
+    border-bottom: 2px solid var(--ink);
+    max-width: 1100px;
+    font-size: 1.02rem;
+    line-height: 1.55;
+  }
+  .verdict h2 { font-size: 0.8rem; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 12px; color: var(--orange); }
+  .verdict p { margin-bottom: 8px; }
+
+  /* ---------- shortlist bar ---------- */
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--ink);
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 5vw;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+  }
+  .bar .count b { color: var(--orange); font-size: 1.1rem; }
+  .bar button {
+    background: none;
+    border: 1px solid var(--cream);
+    color: var(--cream);
+    padding: 7px 16px;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-left: 10px;
+  }
+  .bar button:hover { background: var(--orange); border-color: var(--orange); color: var(--ink); }
+
+  /* ---------- collections ---------- */
+  section { padding: 48px 5vw 20px; }
+  .sec-head { display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; margin-bottom: 6px; }
+  .sec-head h2 { font-size: clamp(1.4rem, 3.4vw, 2.2rem); font-weight: 800; letter-spacing: -0.01em; }
+  .sec-head .tag {
+    font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase;
+    border: 1px solid var(--ink); padding: 4px 10px;
+  }
+  .sec-note { max-width: 760px; font-size: 0.92rem; line-height: 1.5; color: #3a352a; margin-bottom: 26px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 26px;
+    padding-bottom: 30px;
+  }
+  .card { cursor: pointer; }
+  .frame {
+    position: relative;
+    aspect-ratio: 2 / 3;
+    background: var(--teal);
+    overflow: hidden;
+    box-shadow: 0 2px 0 var(--ink);
+    border: 1px solid var(--ink);
+  }
+  .frame img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.25s ease;
+  }
+  .card:hover .frame img { transform: scale(1.03); }
+  .card.picked .frame { outline: 4px solid var(--orange); outline-offset: -4px; }
+  .pick {
+    position: absolute;
+    top: 10px; right: 10px;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 2px solid var(--cream);
+    background: rgba(14,14,14,0.45);
+    color: var(--cream);
+    font-size: 16px;
+    line-height: 26px;
+    text-align: center;
+    user-select: none;
+  }
+  .card.picked .pick { background: var(--orange); border-color: var(--orange); color: var(--ink); }
+  .meta { padding: 10px 2px 0; }
+  .meta .num { font-size: 0.7rem; letter-spacing: 0.16em; color: var(--orange); font-weight: 700; }
+  .meta .title { font-size: 0.92rem; font-weight: 600; margin-top: 2px; }
+
+  /* ---------- archive note ---------- */
+  .archive {
+    margin: 20px 5vw 0;
+    border: 1px dashed var(--ink);
+    padding: 26px;
+    max-width: 1100px;
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+  .archive h3 { font-size: 0.8rem; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 10px; }
+
+  footer {
+    margin-top: 60px;
+    background: var(--ink);
+    color: var(--cream);
+    padding: 40px 5vw;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+  }
+  footer .tg { color: var(--orange); font-weight: 700; text-transform: uppercase; letter-spacing: 0.18em; }
+
+  /* ---------- lightbox ---------- */
+  .lb {
+    position: fixed; inset: 0;
+    background: rgba(14,14,14,0.93);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .lb.open { display: flex; }
+  .lb img { max-height: 84vh; max-width: 92vw; border: 1px solid var(--cream); }
+  .lb .cap { color: var(--cream); font-size: 0.85rem; letter-spacing: 0.12em; text-transform: uppercase; }
+  .lb .cap b { color: var(--orange); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wordmark">ALLEY<span class="rim"></span><span class="rim finish"></span>P</div>
+  <div class="sub">arts &nbsp;·&nbsp; collection launch review &nbsp;·&nbsp; <em>the pass is the play</em></div>
+</header>
+
+<div class="stats">
+  <div class="stat"><b>36</b><span>launch candidates</span></div>
+  <div class="stat"><b>3</b><span>coherent collections</span></div>
+  <div class="stat"><b>156</b><span>originals in archive</span></div>
+  <div class="stat"><b>2:3</b><span>print-ready ratio</span></div>
+</div>
+
+<div class="verdict">
+  <h2>Do we have enough to launch?</h2>
+  <p><strong>Yes — with room to spare.</strong> A typical limited print drop is 8–12 pieces. Below are three coherent 12-piece collections, each with a consistent palette and a clean numbering system. That's one launch plus two follow-up drops already in hand.</p>
+  <p>Recommended play: pick the strongest <strong>10–12 across one lane</strong> for Drop 01 (tap posters to shortlist them — the count follows you down the page), hold the second lane for Drop 02, and let the hyperreal city collection be the style departure for Drop 03.</p>
+</div>
+
+<div class="bar">
+  <div class="count">SHORTLIST&nbsp; <b id="count">0</b>&nbsp;/ 12 target</div>
+  <div>
+    <button onclick="copyList()">Copy list</button>
+    <button onclick="clearList()">Clear</button>
+  </div>
+</div>
+
+<section id="painterly">
+  <div class="sec-head"><h2>Launch 12 — Painterly</h2><span class="tag">Drop 01 candidate</span><span class="tag">12 pieces</span></div>
+  <p class="sec-note">The flagship lane. Basketball-as-labyrinth in the core palette (maze teal, sunset orange, warm cream). Most coherent set — gallery-wall ready.</p>
+  <div class="grid" data-dir="outputs/alleyoop-launch-12-v2/painterly" data-col="P"></div>
+</section>
+
+<section id="cartoon">
+  <div class="sec-head"><h2>Launch 12 — Cartoon</h2><span class="tag">Drop 02 candidate</span><span class="tag">12 pieces</span></div>
+  <p class="sec-note">Same 12 concepts, playful lane. Brighter, younger energy — strong for apparel and the youth audience.</p>
+  <div class="grid" data-dir="outputs/alleyoop-launch-12-v2/cartoon" data-col="C"></div>
+</section>
+
+<section id="city">
+  <div class="sec-head"><h2>Hyperreal City</h2><span class="tag">Drop 03 candidate</span><span class="tag">12 pieces</span></div>
+  <p class="sec-note">The style departure: editorial-photoreal city basketball — rooftop courts, rainy Chinatown, glass towers. Premium fashion-editorial feel.</p>
+  <div class="grid" data-dir="outputs/alleyoop-hyperreal-city-v2" data-col="H"></div>
+</section>
+
+<div class="archive">
+  <h3>The archive — 156 originals</h3>
+  <p>The original maze-era catalog (lime greens, sunny yellows, sky blues) lives in <code>collections/basketball-posters/originals/</code>. It's the brand's heritage layer — strongest pieces can be remastered through the I2I refinement pipeline for a future "Origins" drop rather than launched raw.</p>
+</div>
+
+<footer>
+  <span class="tg">The pass is the play.</span><br><br>
+  ALLEYOOP ARTS · internal collection review · not for distribution
+</footer>
+
+<div class="lb" id="lb" onclick="this.classList.remove('open')">
+  <img id="lbImg" src="" alt="">
+  <div class="cap" id="lbCap"></div>
+</div>
+
+<script>
+const COLLECTIONS = {
+  "outputs/alleyoop-launch-12-v2/painterly": [
+    "01_alley_runner_maze_jump_shot_painterly.png",
+    "02_birds_eye_court_overhead_diagram_painterly.png",
+    "03_graffiti_wall_legend_street_mural_collage_painterly.png",
+    "04_neon_rim_portal_rainy_night_painterly.png",
+    "05_the_call_referee_at_the_junction_painterly.png",
+    "06_kaleidoscope_crowd_fans_as_color_blocks_painterly.png",
+    "07_lost_ball_mystery_scavenger_hunt_painterly.png",
+    "08_close_up_hoop_product_poster_simplicity_painterly.png",
+    "09_street_game_california_neighborhood_painterly.png",
+    "10_perfect_pass_arc_through_the_alley_painterly.png",
+    "11_mirrored_shot_reflection_symmetry_painterly.png",
+    "12_clinic_day_community_growth_painterly.png"
+  ],
+  "outputs/alleyoop-launch-12-v2/cartoon": [
+    "01_alley_runner_maze_jump_shot_cartoon.png",
+    "02_birds_eye_court_overhead_diagram_cartoon.png",
+    "03_graffiti_wall_legend_cartoon.png",
+    "04_neon_rim_portal_cartoon.png",
+    "05_the_call_referee_cartoon.png",
+    "06_kaleidoscope_crowd_cartoon.png",
+    "07_lost_ball_mystery_cartoon.png",
+    "08_close_up_hoop_minimal_cartoon.png",
+    "09_street_game_california_cartoon.png",
+    "10_perfect_pass_arc_cartoon.png",
+    "11_mirrored_shot_symmetry_cartoon.png",
+    "12_clinic_day_community_growth_cartoon.png"
+  ],
+  "outputs/alleyoop-hyperreal-city-v2": [
+    "01_rooftop_elevation_sunset.png",
+    "02_skyscraper_court_blue_hour.png",
+    "03_crosswalk_pregame_city_style.png",
+    "04_underpass_night_game.png",
+    "05_tunnel_walk_arena_energy.png",
+    "06_rainy_chinatown_court.png",
+    "07_penthouse_ball_handling.png",
+    "08_chain_link_twilight_portrait.png",
+    "09_glass_tower_fast_break.png",
+    "10_midnight_rooftop_portrait.png",
+    "11_city_rec_center_legacy.png",
+    "12_finals_energy_street_plaza.png"
+  ]
+};
+
+function titleFromSlug(f) {
+  return f.replace(/\.png$/, "")
+          .replace(/^\d+_/, "")
+          .replace(/_(painterly|cartoon)$/, "")
+          .split("_").join(" ")
+          .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+let picks = new Set(JSON.parse(localStorage.getItem("alleyoop-shortlist") || "[]"));
+
+function save() {
+  localStorage.setItem("alleyoop-shortlist", JSON.stringify([...picks]));
+  document.getElementById("count").textContent = picks.size;
+}
+
+document.querySelectorAll(".grid").forEach(grid => {
+  const dir = grid.dataset.dir, col = grid.dataset.col;
+  COLLECTIONS[dir].forEach((file, i) => {
+    const id = col + "-" + file;
+    const src = dir + "/" + file;
+    const card = document.createElement("div");
+    card.className = "card" + (picks.has(id) ? " picked" : "");
+    card.innerHTML =
+      '<div class="frame"><img loading="lazy" src="' + src + '" alt="' + titleFromSlug(file) + '">' +
+      '<div class="pick">' + (picks.has(id) ? "✓" : "+") + "</div></div>" +
+      '<div class="meta"><div class="num">' + col + "-" + String(i + 1).padStart(2, "0") + '</div>' +
+      '<div class="title">' + titleFromSlug(file) + "</div></div>";
+
+    card.querySelector(".pick").addEventListener("click", e => {
+      e.stopPropagation();
+      if (picks.has(id)) { picks.delete(id); card.classList.remove("picked"); e.target.textContent = "+"; }
+      else { picks.add(id); card.classList.add("picked"); e.target.textContent = "✓"; }
+      save();
+    });
+
+    card.addEventListener("click", () => {
+      document.getElementById("lbImg").src = src;
+      document.getElementById("lbCap").innerHTML = "<b>" + col + "-" + String(i + 1).padStart(2, "0") + "</b> &nbsp;" + titleFromSlug(file);
+      document.getElementById("lb").classList.add("open");
+    });
+
+    grid.appendChild(card);
+  });
+});
+
+function copyList() {
+  const txt = [...picks].sort().join("\n");
+  navigator.clipboard.writeText(txt).then(() => alert("Shortlist copied:\n\n" + (txt || "(empty)")));
+}
+function clearList() {
+  picks.clear();
+  document.querySelectorAll(".card.picked").forEach(c => { c.classList.remove("picked"); c.querySelector(".pick").textContent = "+"; });
+  save();
+}
+save();
+</script>
+
+</body>
+</html>
