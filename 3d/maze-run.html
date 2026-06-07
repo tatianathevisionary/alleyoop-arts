@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALLEYOOP — Maze Run (loop prototype)</title>
+<style>
+  /* Collection layer: Alleyoop Core — maze teal walls, sky blue air, court green
+     floor, warm cream sun. The ball DRIBBLES the maze and finishes at the rim. */
+  html, body { margin: 0; height: 100%; background: #0E0E0E; overflow: hidden; color: #F2E9C7; }
+  .tag {
+    position: fixed; left: 24px; bottom: 20px;
+    font: 500 13px/1.4 ui-monospace, "SF Mono", Menlo, monospace;
+    color: #F2E9C7; letter-spacing: .12em; user-select: none;
+  }
+  .tag b { letter-spacing: .18em; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="frame"><canvas id="scene"></canvas></div>
+<div class="tag"><b>ALLEYOOP</b> · maze run · 12s loop · dribble the maze, finish at the rim</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { mountViewframe, fitFov } from './viewframe.js';
+import { makeBasketball, makeNet, bankShotPoints, dribbleY, BALL_ORANGE } from './basketball.js';
+
+const TEAL = 0x2B5D4B, SKY = 0x88BBCC, GREEN = 0x40815D, CREAM = 0xF2E9C7, CHARCOAL = 0x223333;
+const LOOP_SECONDS = 12;
+const BALL_R = 0.34;
+
+// --- renderer / scene / camera ------------------------------------------------
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene'), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(SKY);
+scene.fog = new THREE.Fog(SKY, 26, 60);
+
+const camera = new THREE.PerspectiveCamera(46, 1, 0.1, 100);
+
+const sun = new THREE.DirectionalLight(0xFFF4DC, 2.8);
+sun.position.set(-10, 14, 8);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = sun.shadow.camera.bottom = -18;
+sun.shadow.camera.right = sun.shadow.camera.top = 18;
+sun.shadow.radius = 5;
+scene.add(sun);
+scene.add(new THREE.HemisphereLight(SKY, CREAM, 0.95));
+
+const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(90, 90),
+  new THREE.MeshStandardMaterial({ color: GREEN, roughness: 0.95 })
+);
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+scene.add(floor);
+
+// --- the route: sudden turns, then the shot ---------------------------------------
+// Dribble route (XZ centerline). Every corner is a hard 90° — the maze decides.
+const ROUTE = [
+  new THREE.Vector2( 0.0,  9.0),
+  new THREE.Vector2( 0.0,  3.0),    // turn
+  new THREE.Vector2(-4.5,  3.0),    // turn
+  new THREE.Vector2(-4.5, -2.0),    // turn
+  new THREE.Vector2( 3.0, -2.0),    // turn
+  new THREE.Vector2( 3.0, -6.0),    // launch zone
+];
+const HOOP = new THREE.Vector3(3.0, 2.55, -8.4);
+
+// --- maze walls: generated alongside every corridor, gaps at the turns -------------
+const wallMat  = new THREE.MeshStandardMaterial({ color: TEAL, roughness: 0.9 });
+const wallMat2 = new THREE.MeshStandardMaterial({ color: SKY, roughness: 0.9 });
+const WALL_H = 1.7, WALL_T = 0.32, HALF_W = 1.25;
+
+function wallBox(cx, cz, w, d, mat = wallMat) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, WALL_H, d), mat);
+  m.position.set(cx, WALL_H / 2, cz);
+  m.castShadow = m.receiveShadow = true;
+  scene.add(m);
+}
+for (let i = 0; i < ROUTE.length - 1; i++) {
+  const a = ROUTE[i], b = ROUTE[i + 1];
+  const dir = new THREE.Vector2().subVectors(b, a);
+  const len = dir.length();
+  dir.normalize();
+  const perp = new THREE.Vector2(-dir.y, dir.x);
+  const mid = new THREE.Vector2().addVectors(a, b).multiplyScalar(0.5);
+  const inner = Math.max(0.8, len - 2.6);          // gap at each corner
+  for (const s of [-1, 1]) {
+    const c = new THREE.Vector2().copy(mid).addScaledVector(perp, s * HALF_W);
+    if (Math.abs(dir.x) > 0.5) wallBox(c.x, c.y, inner, WALL_T);
+    else                       wallBox(c.x, c.y, WALL_T, inner);
+  }
+}
+// maze beyond the route — sky-blue suggestion walls (the labyrinth continues)
+wallBox(-7.5,  0.5, WALL_T, 7.0, wallMat2);
+wallBox(-2.0,  6.2, 5.0, WALL_T, wallMat2);
+wallBox( 6.2,  0.0, WALL_T, 9.0, wallMat2);
+wallBox( 0.5, -4.4, 4.0, WALL_T, wallMat2);
+wallBox(-6.0, -5.8, 5.5, WALL_T, wallMat2);
+
+// --- the hoop at the maze's end: pole, board, orange rim, net ------------------------
+const poleMat = new THREE.MeshStandardMaterial({ color: CHARCOAL, roughness: 0.6 });
+const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 3.4, 12), poleMat);
+pole.position.set(HOOP.x, 1.7, HOOP.z - 0.62);
+pole.castShadow = true;
+scene.add(pole);
+const board = new THREE.Mesh(
+  new THREE.BoxGeometry(1.5, 1.1, 0.08),
+  new THREE.MeshStandardMaterial({ color: CREAM, roughness: 0.85 })
+);
+board.position.set(HOOP.x, 3.0, HOOP.z - 0.55);
+board.castShadow = true;
+scene.add(board);
+const rim = new THREE.Mesh(
+  new THREE.TorusGeometry(0.45, 0.045, 16, 64),
+  new THREE.MeshStandardMaterial({ color: BALL_ORANGE, roughness: 0.45 })
+);
+rim.rotation.x = Math.PI / 2;
+rim.position.copy(HOOP);
+rim.castShadow = true;
+scene.add(rim);
+const net = makeNet(0.43, { color: CREAM });
+net.position.copy(HOOP);
+scene.add(net);
+
+// --- the ball ---------------------------------------------------------------------------
+const ball = makeBasketball(BALL_R, { castShadow: true, seamWidth: 0.06 });
+scene.add(ball);
+
+// --- piecewise motion: DRIBBLE (9 bounces, hard turns) → SHOT (true arc) → DROP → HOME ---
+const SEG = { dribble: 0.58, shot: 0.70, drop: 0.76, home: 1.0 };
+const HOPS = 9, HOME_HOPS = 4;
+
+// polyline sampling
+const segLens = [];
+let routeLen = 0;
+for (let i = 0; i < ROUTE.length - 1; i++) {
+  const l = ROUTE[i].distanceTo(ROUTE[i + 1]);
+  segLens.push(l);
+  routeLen += l;
+}
+function routeAt(p, out) {   // p 0..1 → XZ on the dribble route
+  let s = p * routeLen;
+  for (let i = 0; i < segLens.length; i++) {
+    if (s <= segLens[i] || i === segLens.length - 1) {
+      const q = Math.min(1, s / segLens[i]);
+      out.set(
+        ROUTE[i].x + (ROUTE[i + 1].x - ROUTE[i].x) * q,
+        ROUTE[i].y + (ROUTE[i + 1].y - ROUTE[i].y) * q
+      );
+      return;
+    }
+    s -= segLens[i];
+  }
+}
+
+// the shot: true ballistic samples from the launch zone into the rim
+const LAUNCH = new THREE.Vector3(ROUTE.at(-1).x, BALL_R, ROUTE.at(-1).y);
+const GLASS = new THREE.Vector3(HOOP.x, HOOP.y + 0.42, HOOP.z - 0.48);   // board behind the rim
+const ARC = [LAUNCH.clone(), ...bankShotPoints(LAUNCH, HOOP, GLASS, 64, 9)];
+
+// the way home: out from under the net, around the outside of the maze
+const HOME = [
+  new THREE.Vector2(3.0, -8.9),   // exactly where the drop ends — no teleporting
+  new THREE.Vector2(6.8, -9.2),
+  new THREE.Vector2(6.8,  9.0),
+  new THREE.Vector2(0.0,  9.0),
+];
+const homeLens = [];
+let homeLen = 0;
+for (let i = 0; i < HOME.length - 1; i++) {
+  const l = HOME[i].distanceTo(HOME[i + 1]);
+  homeLens.push(l);
+  homeLen += l;
+}
+function homeAt(p, out) {
+  let s = p * homeLen;
+  for (let i = 0; i < homeLens.length; i++) {
+    if (s <= homeLens[i] || i === homeLens.length - 1) {
+      const q = Math.min(1, s / homeLens[i]);
+      out.set(
+        HOME[i].x + (HOME[i + 1].x - HOME[i].x) * q,
+        HOME[i].y + (HOME[i + 1].y - HOME[i].y) * q
+      );
+      return;
+    }
+    s -= homeLens[i];
+  }
+}
+
+const xz = new THREE.Vector2();
+function ballAt(t, out) {
+  if (t < SEG.dribble) {                       // dribbling the maze — it BOUNCES
+    const p = t / SEG.dribble;
+    routeAt(p, xz);
+    out.set(xz.x, dribbleY(p, HOPS, 1.05, BALL_R), xz.y);
+  } else if (t < SEG.shot) {                   // the shot — real physics
+    const p = (t - SEG.dribble) / (SEG.shot - SEG.dribble);
+    const f = p * (ARC.length - 1);
+    const i = Math.min(ARC.length - 2, Math.floor(f));
+    out.copy(ARC[i]).lerp(ARC[i + 1], f - i);
+  } else if (t < SEG.drop) {                   // through the net
+    const p = (t - SEG.shot) / (SEG.drop - SEG.shot);
+    out.set(HOOP.x, HOOP.y - (HOOP.y - BALL_R) * p * p, HOOP.z - 0.5 * p);
+  } else {                                     // bouncing home around the maze
+    const p = (t - SEG.drop) / (SEG.home - SEG.drop);
+    homeAt(p, xz);
+    out.set(xz.x, dribbleY(p, HOME_HOPS, 1.5, BALL_R), xz.y);
+  }
+}
+
+// --- animate -------------------------------------------------------------------------------
+const clock = new THREE.Clock();
+const frameEl = document.getElementById('frame');
+const pos = new THREE.Vector3(), prev = new THREE.Vector3();
+const camTarget = new THREE.Vector3(0, 0, 9);
+
+function resize() {
+  const w = frameEl.clientWidth || innerWidth, h = frameEl.clientHeight || innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  fitFov(camera, 46, 56);
+}
+addEventListener('frame-resize', resize);
+mountViewframe();
+resize();
+
+renderer.setAnimationLoop(() => {
+  const t = (clock.getElapsedTime() % LOOP_SECONDS) / LOOP_SECONDS;
+
+  prev.copy(pos);
+  ballAt(t, pos);
+  ball.position.copy(pos);
+
+  // roll from actual travel + squash near the floor on contacts
+  const v = pos.distanceTo(prev);
+  ball.rotation.x -= v / BALL_R * 0.5;
+  const squash = 1 - 0.18 * Math.exp(-Math.pow((pos.y - BALL_R) / 0.12, 2));
+  ball.scale.set(2 - squash, squash, 2 - squash).multiplyScalar(0.5 + 0.5 * squash);
+
+  // rim pulse on the swish
+  const nearRim = Math.exp(-Math.pow(pos.distanceTo(HOOP) / 0.5, 2));
+  rim.scale.setScalar(1 + nearRim * 0.1);
+
+  // follow-cam: high 3/4 — the maze reads like the posters' overhead view
+  camTarget.lerp(pos, 0.06);
+  camera.position.set(camTarget.x + 0.5, camTarget.y + 8.2, camTarget.z + 7.0);
+  camera.lookAt(camTarget.x, 0.6, camTarget.z);
+
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

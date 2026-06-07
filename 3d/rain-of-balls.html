@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALLEYOOP — The Tip-Off (rain of balls)</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0E0E0E; overflow: hidden; color: #F2E9C7; }
+  .tag { position: fixed; left: 24px; bottom: 20px; font: 500 13px/1.4 ui-monospace, Menlo, monospace;
+         color: #F2E9C7; letter-spacing: .12em; user-select: none; }
+  .tag b { letter-spacing: .18em; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="frame"><canvas id="scene"></canvas></div>
+<div class="tag"><b>ALLEYOOP</b> · the tip-off · 4s loop · 24 balls, one rhythm</div>
+<script type="module">
+import * as THREE from 'three';
+import { mountViewframe, fitFov } from './viewframe.js';
+import { makeBasketball, dribbleY } from './basketball.js';
+
+const CREAM = 0xF2E9C7;
+const LOOP_SECONDS = 4, TAU = Math.PI * 2;
+const R = 0.32;
+
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene'), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(CREAM);
+const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 60);
+camera.position.set(0, 4.4, 11);
+camera.lookAt(0, 1.0, 0);
+
+const key = new THREE.DirectionalLight(0xffffff, 2.6);
+key.position.set(4, 8, 5);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.left = key.shadow.camera.bottom = -9;
+key.shadow.camera.right = key.shadow.camera.top = 9;
+key.shadow.radius = 7;
+scene.add(key, new THREE.HemisphereLight(CREAM, 0xCBBF9A, 1.1));
+
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(50, 50), new THREE.ShadowMaterial({ opacity: 0.15 }));
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+scene.add(floor);
+
+// 6×4 grid — every ball dribbles, phase ripples across the grid like a tip-off
+const balls = [];
+for (let i = 0; i < 6; i++) {
+  for (let j = 0; j < 4; j++) {
+    const b = makeBasketball(R, { castShadow: true, seamWidth: 0.06 });
+    const x = (i - 2.5) * 1.6, z = (j - 1.5) * 1.6;
+    b.position.set(x, R, z);
+    scene.add(b);
+    balls.push({ b, x, z, phase: ((i + j) * 0.125) % 1, spin: (i * 7 + j * 13) % 5 });
+  }
+}
+
+const clock = new THREE.Clock();
+const frameEl = document.getElementById('frame');
+function resize() {
+  const w = frameEl.clientWidth || innerWidth, h = frameEl.clientHeight || innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  fitFov(camera, 38, 48);
+}
+addEventListener('frame-resize', resize);
+mountViewframe();
+resize();
+
+renderer.setAnimationLoop(() => {
+  const t = (clock.getElapsedTime() % LOOP_SECONDS) / LOOP_SECONDS;
+  for (const { b, x, z, phase, spin } of balls) {
+    const p = (t + phase) % 1;
+    const y = dribbleY(p, 2, 1.0, R);
+    b.position.set(x, y, z);
+    const squash = 1 - 0.18 * Math.exp(-Math.pow((y - R) / 0.1, 2));
+    b.scale.set(2 - squash, squash, 2 - squash).multiplyScalar(0.5 + 0.5 * squash);
+    b.rotation.y = t * TAU * 0.0 + spin;   // varied static spins — texture, not chaos
+  }
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

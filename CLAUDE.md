@@ -20,11 +20,17 @@ Canadian basketball art + culture brand. *The pass is the play.*
 
 ## The site
 
-Static pages at repo root, deployed by `.github/workflows/static.yml` to GitHub Pages
-(https://tatianathevisionary.github.io/alleyoop-arts/) on every push to main —
-**every push publishes publicly**. React-in-browser pages share `site.css` + `logo.jsx`
-(Wordmark/Monogram components). Curated 30-work collection data lives in `gallery.jsx`;
-images in `art/`.
+**Auto-deploy is OFF** — the GitHub Pages workflow was removed 2026-06-07 (Damion's call:
+no publishing to Pages). Pushes update the repo only. The previously-deployed site may
+still be live until Pages is disabled in repo settings. Local preview:
+`python3 -m http.server 4488` from repo root. `3d/renders/` is gitignored
+(290MB of video masters, local only).
+
+Layout: public pages at root (`index/about/gallery.html` + `landing/about/gallery/logo.jsx`
++ `site.css`, images in `art/`); internal review tools in `studio/` (brand, launch-plan,
+studio, review + their jsx — they reference `../logo.jsx`); motion pieces in `3d/`
+(20 flagships + generative engine `engine.js`/`pieces.js` = THE HUNDRED at
+`3d/hundred.html`, all served via `python3 -m http.server 4488` from repo root).
 
 ## The art
 

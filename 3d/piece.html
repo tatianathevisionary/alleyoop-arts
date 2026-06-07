@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALLEYOOP — piece</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0E0E0E; overflow: hidden; color: #F2E9C7; }
+  .tag { position: fixed; left: 24px; bottom: 20px; font: 500 13px/1.4 ui-monospace, "SF Mono", Menlo, monospace;
+         color: #F2E9C7; letter-spacing: .12em; user-select: none; }
+  .tag b { letter-spacing: .18em; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="frame"><canvas id="scene"></canvas></div>
+<div class="tag"><b>ALLEYOOP</b> · loading…</div>
+<script type="module">
+import { boot } from './engine.js';
+boot();
+</script>
+</body>
+</html>

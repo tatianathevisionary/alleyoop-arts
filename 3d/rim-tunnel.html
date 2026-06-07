@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALLEYOOP — The Walkout (rim tunnel)</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0B0B14; overflow: hidden; color: #F2E9C7; }
+  .tag { position: fixed; left: 24px; bottom: 20px; font: 500 13px/1.4 ui-monospace, Menlo, monospace;
+         color: #F2E9C7; letter-spacing: .12em; user-select: none; }
+  .tag b { letter-spacing: .18em; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="frame"><canvas id="scene"></canvas></div>
+<div class="tag"><b>ALLEYOOP</b> · the walkout · 3s loop · every hoop you ever made, at once</div>
+<script type="module">
+import * as THREE from 'three';
+import { mountViewframe, fitFov } from './viewframe.js';
+import { makeBasketball, makeNet, BALL_ORANGE } from './basketball.js';
+
+const DEEP = 0x0B0B14, CORAL = 0xE2726D, ELECTRIC = 0x3A6DB0, CREAM = 0xF2E9C7;
+const LOOP_SECONDS = 3, TAU = Math.PI * 2;
+const SPACING = 3.2, N_RINGS = 12;
+
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene'), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(DEEP);
+scene.fog = new THREE.Fog(DEEP, 10, 34);
+
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 60);
+camera.position.set(0, 0, 6);
+
+scene.add(new THREE.AmbientLight(0x404060, 0.8));
+const lead = new THREE.PointLight(CREAM, 26, 24);
+lead.position.set(0, 0.5, 0);
+scene.add(lead);
+
+// the tunnel: rims facing the camera, nets reaching back, alternating glow colors
+const rings = [];
+for (let i = 0; i < N_RINGS; i++) {
+  const g = new THREE.Group();
+  const color = i % 2 === 0 ? CORAL : ELECTRIC;
+  const rim = new THREE.Mesh(
+    new THREE.TorusGeometry(1.5, 0.06, 16, 80),
+    new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 1.2, roughness: 0.5 })
+  );
+  g.add(rim);                                  // facing the camera (XY plane)
+  const net = makeNet(1.45, { color: CREAM, emissiveIntensity: 0.25, tiers: 3, strands: 10, depth: 1.1 });
+  net.rotation.x = -Math.PI / 2;               // hangs along the tunnel, not down
+  g.add(net);
+  scene.add(g);
+  rings.push(g);
+}
+
+// the ball — flying down the tunnel just ahead, spinning like a bullet pass
+const ball = makeBasketball(0.42, { seamWidth: 0.06, emissiveIntensity: 0.15 });
+scene.add(ball);
+
+const clock = new THREE.Clock();
+const frameEl = document.getElementById('frame');
+function resize() {
+  const w = frameEl.clientWidth || innerWidth, h = frameEl.clientHeight || innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  fitFov(camera, 50, 56);
+}
+addEventListener('frame-resize', resize);
+mountViewframe();
+resize();
+
+renderer.setAnimationLoop(() => {
+  const t = (clock.getElapsedTime() % LOOP_SECONDS) / LOOP_SECONDS;
+
+  // travel exactly TWO spacings per loop (even count keeps the color pattern aligned)
+  const scroll = t * SPACING * 2;
+  rings.forEach((g, i) => {
+    let z = ((-i * SPACING + scroll) % (N_RINGS * SPACING) + N_RINGS * SPACING) % (N_RINGS * SPACING);
+    g.position.z = z - N_RINGS * SPACING + SPACING * 0.4;   // nearest ring stays ahead of camera
+    // gentle drift makes the tunnel feel alive
+    g.position.x = Math.sin((i * 0.8) + t * TAU) * 0.12;
+    g.position.y = Math.cos((i * 1.3) + t * TAU) * 0.12;
+  });
+
+  ball.position.set(0, -0.1, -2.2);
+  ball.rotation.z -= 0.12;                      // bullet spin
+  ball.rotation.x = Math.sin(t * TAU) * 0.1;
+
+  camera.position.x = Math.sin(t * TAU) * 0.15; // breath, returns at the seam
+  camera.lookAt(0, 0, -8);
+
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

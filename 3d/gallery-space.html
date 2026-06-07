@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALLEYOOP — The Gallery (exhibit space)</title>
+<style>
+  /* The gallery for the game — literally. Cream walls, the real 30-work
+     collection on them, basketballs on pedestals, a live rim at the far end.
+     NOTE: needs the local server (textures load from ../art/). */
+  html, body { margin: 0; height: 100%; background: #0E0E0E; overflow: hidden; color: #F2E9C7; }
+  .tag {
+    position: fixed; left: 24px; bottom: 20px;
+    font: 500 13px/1.4 ui-monospace, "SF Mono", Menlo, monospace;
+    color: #F2E9C7; letter-spacing: .12em; user-select: none;
+  }
+  .tag b { letter-spacing: .18em; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="frame"><canvas id="scene"></canvas></div>
+<div class="tag"><b>ALLEYOOP</b> · the gallery · 20s loop · the gallery for the game</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { mountViewframe, fitFov } from './viewframe.js';
+import { makeBasketball, makeNet, BALL_ORANGE } from './basketball.js';
+
+const CREAM = 0xF2E9C7, INK = 0x0E0E0E, CHARCOAL = 0x223333;
+const LOOP_SECONDS = 20;
+const TAU = Math.PI * 2;
+
+// the show — ten works from the curated 30 (served from ../art/)
+const WORKS = [
+  '01-alley-runner', '02-hoop', '04-burst', '08-perfect-pass', '09-high-jump',
+  '13-creative', '15-slam', '17-sentinel', '18-rise', '20-underdog',
+];
+
+// --- renderer / scene / camera -----------------------------------------------------
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene'), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xEFE5C0);
+
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 80);
+
+scene.add(new THREE.AmbientLight(CREAM, 0.75));
+const ceiling = new THREE.DirectionalLight(0xFFF6E0, 1.6);
+ceiling.position.set(2, 8, 4);
+ceiling.castShadow = true;
+ceiling.shadow.mapSize.set(2048, 2048);
+ceiling.shadow.camera.left = ceiling.shadow.camera.bottom = -16;
+ceiling.shadow.camera.right = ceiling.shadow.camera.top = 16;
+scene.add(ceiling);
+
+// --- the hall: cream walls, charcoal floor ------------------------------------------
+const HALL_W = 10, HALL_L = 30, HALL_H = 5;
+const wallMat = new THREE.MeshStandardMaterial({ color: CREAM, roughness: 0.95 });
+const floorMat = new THREE.MeshStandardMaterial({ color: CHARCOAL, roughness: 0.55, metalness: 0.1 });
+
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(HALL_W, HALL_L), floorMat);
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+scene.add(floor);
+
+for (const s of [-1, 1]) {
+  const wall = new THREE.Mesh(new THREE.PlaneGeometry(HALL_L, HALL_H), wallMat);
+  wall.rotation.y = s * Math.PI / 2 * -1;
+  wall.position.set(s * HALL_W / 2, HALL_H / 2, 0);
+  wall.receiveShadow = true;
+  scene.add(wall);
+}
+const endWall = new THREE.Mesh(new THREE.PlaneGeometry(HALL_W, HALL_H), wallMat);
+endWall.position.set(0, HALL_H / 2, -HALL_L / 2);
+endWall.receiveShadow = true;
+scene.add(endWall);
+const ceil = new THREE.Mesh(new THREE.PlaneGeometry(HALL_W, HALL_L), wallMat);
+ceil.rotation.x = Math.PI / 2;
+ceil.position.y = HALL_H;
+scene.add(ceil);
+
+// --- the art: real collection works, framed, museum-lit -------------------------------
+const loader = new THREE.TextureLoader();
+const frameMat = new THREE.MeshStandardMaterial({ color: INK, roughness: 0.7 });
+WORKS.forEach((name, i) => {
+  const side = i % 2 === 0 ? -1 : 1;
+  const slot = Math.floor(i / 2);
+  const z = 9 - slot * 5.2;
+  const W = 2.0, H = 2.0;   // the originals are square
+
+  const tex = loader.load(`../art/${name}.png`);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  // MeshBasicMaterial = unlit = perfectly museum-lit art, no hotspots
+  const art = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ map: tex }));
+  art.position.set(side * (HALL_W / 2 - 0.12), 2.3, z);   // clearly proud of the frame — no z-fight
+  art.rotation.y = -side * Math.PI / 2;
+  scene.add(art);
+
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(W + 0.18, H + 0.18, 0.07), frameMat);
+  frame.position.set(side * (HALL_W / 2 - 0.05), 2.3, z);
+  frame.rotation.y = -side * Math.PI / 2;
+  scene.add(frame);
+});
+
+// --- the balls: three pedestals down the center, slowly turning -------------------------
+const pedestalMat = new THREE.MeshStandardMaterial({ color: 0xE5DBB5, roughness: 0.9 });
+const pedestalBalls = [];
+[6.5, 0.5, -5.5].forEach((z, i) => {
+  const ped = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.1, 0.9), pedestalMat);
+  ped.position.set(i % 2 === 0 ? -1.7 : 1.7, 0.55, z);
+  ped.castShadow = ped.receiveShadow = true;
+  scene.add(ped);
+  const b = makeBasketball(0.34, { castShadow: true, seamWidth: 0.06 });
+  b.position.set(ped.position.x, 1.44, z);
+  scene.add(b);
+  pedestalBalls.push(b);
+});
+
+// --- the live piece: rim + net on the end wall, a ball dropping through, forever ---------
+const HOOP = new THREE.Vector3(0, 2.6, -HALL_L / 2 + 0.75);
+const rim = new THREE.Mesh(
+  new THREE.TorusGeometry(0.45, 0.045, 16, 64),
+  new THREE.MeshStandardMaterial({ color: BALL_ORANGE, roughness: 0.45 })
+);
+rim.rotation.x = Math.PI / 2;
+rim.position.copy(HOOP);
+scene.add(rim);
+const net = makeNet(0.43, { color: 0x9A937B });
+net.position.copy(HOOP);
+scene.add(net);
+const liveBall = makeBasketball(0.32, { castShadow: true, seamWidth: 0.06 });
+scene.add(liveBall);
+
+// wall text above the live piece — the room signs itself
+function bannerSprite(text, px = 54) {
+  const c = document.createElement('canvas');
+  c.width = 1024; c.height = 128;
+  const g = c.getContext('2d');
+  g.font = `700 ${px}px Menlo, "SF Mono", monospace`;
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.fillStyle = '#0E0E0E';
+  g.fillText(text, 512, 64);
+  const tex = new THREE.CanvasTexture(c);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
+  s.scale.set(6.2, 0.78, 1);
+  return s;
+}
+const sign = bannerSprite('THE PASS IS THE PLAY');
+sign.position.set(0, 3.9, -HALL_L / 2 + 0.6);
+scene.add(sign);
+
+// --- animate --------------------------------------------------------------------------------
+const clock = new THREE.Clock();
+const frameEl = document.getElementById('frame');
+
+function resize() {
+  const w = frameEl.clientWidth || innerWidth, h = frameEl.clientHeight || innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  fitFov(camera, 50, 62);   // 9:16 still reads the hall + art on both walls
+}
+addEventListener('frame-resize', resize);
+mountViewframe();
+resize();
+
+renderer.setAnimationLoop(() => {
+  const t = (clock.getElapsedTime() % LOOP_SECONDS) / LOOP_SECONDS;
+
+  // visitor drift: glide down the hall and back — cosine = seamless
+  const z = 11.5 - (1 - Math.cos(t * TAU)) * 0.5 * 17;
+  camera.position.set(Math.sin(t * TAU) * 1.2, 2.0, z);
+  camera.lookAt(Math.sin(t * TAU) * 0.6, 1.9, z - 8);
+
+  // pedestal balls turn slowly — integer turns per loop, seamless
+  pedestalBalls.forEach((b, i) => { b.rotation.y = t * TAU * (i + 1) / 2; });
+
+  // the live piece: a make every 4 seconds (5 per loop, seamless)
+  const lt = (t * 5) % 1;
+  if (lt < 0.55) {                       // fall from above into the rim
+    const p = lt / 0.55;
+    liveBall.position.set(HOOP.x, HOOP.y + 2.2 - 2.2 * p * p, HOOP.z);
+  } else {                               // through the net, fade low, reset above
+    const p = (lt - 0.55) / 0.45;
+    liveBall.position.set(HOOP.x, HOOP.y - (HOOP.y - 0.32) * Math.min(1, p * 1.4), HOOP.z);
+  }
+  liveBall.rotation.x = lt * TAU;
+  const nearRim = Math.exp(-Math.pow(liveBall.position.distanceTo(HOOP) / 0.4, 2));
+  rim.scale.setScalar(1 + nearRim * 0.08);
+
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

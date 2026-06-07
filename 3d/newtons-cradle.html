@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALLEYOOP — Ballistic Still Life (Newton's cradle)</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0E0E0E; overflow: hidden; color: #F2E9C7; }
+  .tag { position: fixed; left: 24px; bottom: 20px; font: 500 13px/1.4 ui-monospace, Menlo, monospace;
+         color: #F2E9C7; letter-spacing: .12em; user-select: none; }
+  .tag b { letter-spacing: .18em; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="frame"><canvas id="scene"></canvas></div>
+<div class="tag"><b>ALLEYOOP</b> · ballistic still life · 4s loop · the energy transfers</div>
+<script type="module">
+import * as THREE from 'three';
+import { mountViewframe, fitFov } from './viewframe.js';
+import { makeBasketball } from './basketball.js';
+
+const CREAM = 0xF2E9C7, INK = 0x0E0E0E;
+const LOOP_SECONDS = 4, TAU = Math.PI * 2;
+const R = 0.34, CABLE = 2.4, PIVOT_Y = 4.2;
+
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene'), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(CREAM);
+const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 50);
+camera.position.set(0, 2.2, 8.6);
+camera.lookAt(0, 2.0, 0);
+
+const key = new THREE.DirectionalLight(0xffffff, 2.6);
+key.position.set(3, 7, 5);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.left = key.shadow.camera.bottom = -5;
+key.shadow.camera.right = key.shadow.camera.top = 5;
+key.shadow.radius = 8;
+scene.add(key, new THREE.HemisphereLight(CREAM, 0xCBBF9A, 1.1));
+
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({ opacity: 0.15 }));
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+scene.add(floor);
+
+// the frame bar
+const inkMat = new THREE.MeshStandardMaterial({ color: INK, roughness: 0.7 });
+const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 4.2, 12), inkMat);
+bar.rotation.z = Math.PI / 2;
+bar.position.y = PIVOT_Y;
+bar.castShadow = true;
+scene.add(bar);
+
+// five balls on cables — pendulum groups pivot at the bar
+const pends = [];
+for (let i = 0; i < 5; i++) {
+  const g = new THREE.Group();
+  g.position.set((i - 2) * (R * 2 + 0.02), PIVOT_Y, 0);
+  const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, CABLE, 8), inkMat);
+  cable.position.y = -CABLE / 2;
+  g.add(cable);
+  const b = makeBasketball(R, { castShadow: true, seamWidth: 0.06 });
+  b.position.y = -CABLE;
+  g.add(b);
+  scene.add(g);
+  pends.push(g);
+}
+
+const A = 0.62;   // swing amplitude (radians)
+const clock = new THREE.Clock();
+const frameEl = document.getElementById('frame');
+function resize() {
+  const w = frameEl.clientWidth || innerWidth, h = frameEl.clientHeight || innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  fitFov(camera, 36, 44);
+}
+addEventListener('frame-resize', resize);
+mountViewframe();
+resize();
+
+renderer.setAnimationLoop(() => {
+  const t = (clock.getElapsedTime() % LOOP_SECONDS) / LOOP_SECONDS;
+  const u = Math.sin(t * TAU * 2);            // two exchanges per loop
+  pends[0].rotation.z = A * Math.max(0, u);   // left swings out…
+  pends[4].rotation.z = -A * Math.max(0, -u); // …right answers
+  // the middle three carry the click — a tiny shiver at each impact
+  const impact = Math.exp(-Math.pow(Math.abs(u) / 0.08, 2)) * 0.02;
+  for (let i = 1; i < 4; i++) pends[i].rotation.z = Math.sin(t * TAU * 8 + i) * impact;
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALLEYOOP — Basketball Galaxy (loop prototype)</title>
+<style>
+  /* Collection layer. Palettes from ALLEYOOP_ARTS_STYLE_GUIDE.md.
+     Every ball is a basketball: #EE9933, bold charcoal seams — the catalog rule. */
+  html, body { margin: 0; height: 100%; background: #0B0B14; overflow: hidden; color: #F2E9C7; }
+  .tag {
+    position: fixed; left: 24px; bottom: 20px;
+    font: 500 13px/1.4 ui-monospace, "SF Mono", Menlo, monospace;
+    color: #F2E9C7; letter-spacing: .12em; user-select: none;
+  }
+  .tag b { letter-spacing: .18em; }
+  .palette {
+    position: fixed; left: 24px; top: 16px; z-index: 10;
+    font: 600 11px/1 ui-monospace, Menlo, monospace; letter-spacing: .08em;
+    padding: 7px 12px; cursor: pointer;
+    background: transparent; color: #F2E9C7;
+    border: 1.5px solid #F2E9C7; border-radius: 2px; opacity: .6;
+  }
+  .palette:hover { opacity: 1; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="frame"><canvas id="scene"></canvas></div>
+<button class="palette" id="paletteBtn">PALETTE · NEON NIGHT</button>
+<div class="tag"><b>ALLEYOOP</b> · basketball galaxy · 12s loop</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { mountViewframe, fitFov } from './viewframe.js';
+import { makeBasketball, makeNet, BALL_ORANGE } from './basketball.js';
+
+const LOOP_SECONDS = 12;
+const TAU = Math.PI * 2;
+
+// Palettes straight from the style guide — space, rings, trails, stars.
+// The balls never change color. They're basketballs.
+const PALETTES = [
+  { name: 'NEON NIGHT', space: 0x0B0B14, rings: [0x3A6DB0, 0xE2726D], trails: [0xE2726D, 0x3A6DB0, 0xDE7B7F], stars: 0xDE7B7F },
+  { name: 'MAZE CORE',  space: 0x223333, rings: [0x88BBCC, 0xF2E9C7], trails: [0x88BBCC, 0xF2E9C7, 0x88BBCC], stars: 0xF2E9C7 },
+  { name: 'GRAFFITI',   space: 0x413C44, rings: [0xFF4FA3, 0x0A85BB], trails: [0xFF4FA3, 0x0A85BB, 0xF49B48], stars: 0xF2E9C7 },
+];
+let paletteIndex = 0;
+
+// --- renderer / post ----------------------------------------------------------
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene'), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 200);
+camera.position.set(0, 2.2, 9.5);
+camera.lookAt(0, 0, 0);
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 0.85, 0.7, 0.4));
+
+// the system sits in one group so portrait mode can scale it without recomposing
+const world = new THREE.Group();
+scene.add(world);
+
+// --- starfield -------------------------------------------------------------------
+const starGeo = new THREE.BufferGeometry();
+const starCount = 1600;
+const pos = new Float32Array(starCount * 3);
+for (let i = 0; i < starCount; i++) {
+  const r = 60 + Math.random() * 40;
+  const th = Math.random() * TAU;
+  const ph = Math.acos(2 * Math.random() - 1);
+  pos[i * 3]     = r * Math.sin(ph) * Math.cos(th);
+  pos[i * 3 + 1] = r * Math.sin(ph) * Math.sin(th);
+  pos[i * 3 + 2] = r * Math.cos(ph);
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+const starMat = new THREE.PointsMaterial({
+  color: 0xDE7B7F, size: 0.4, sizeAttenuation: true,
+  transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+});
+const stars = new THREE.Points(starGeo, starMat);
+scene.add(stars);
+
+// --- the sun: one big basketball, glowing ------------------------------------------
+const sunBall = makeBasketball(1.35, { emissiveIntensity: 0.5, seamWidth: 0.05 });
+world.add(sunBall);
+
+const sunLight = new THREE.PointLight(0xffffff, 60, 0, 2);
+scene.add(sunLight);
+scene.add(new THREE.AmbientLight(0x404060, 0.6));
+const fill = new THREE.DirectionalLight(0xffffff, 0.55);
+fill.position.set(0, 3, 10);
+scene.add(fill);
+
+// --- orbit rings ----------------------------------------------------------------------
+const ringMats = [];
+[{ radius: 2.6, tilt: 0.20 }, { radius: 4.0, tilt: -0.12 }].forEach(({ radius, tilt }) => {
+  const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
+  ringMats.push(mat);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(radius, 0.014, 8, 220), mat);
+  ring.rotation.x = Math.PI / 2 + tilt;
+  world.add(ring);
+});
+
+// --- the moons: small basketballs on inclined orbits. Integer orbits = seamless. -------
+const moonSpecs = [
+  { radius: 2.6, size: 0.24, orbits: 3, tilt: 0.20, phase: 0.00 },
+  { radius: 4.0, size: 0.32, orbits: 2, tilt: -0.12, phase: 0.35 },
+  { radius: 5.3, size: 0.18, orbits: 1, tilt: 0.32, phase: 0.65 },
+];
+const moons = moonSpecs.map(spec => {
+  const pivot = new THREE.Group();
+  pivot.rotation.x = spec.tilt;
+  world.add(pivot);
+  const m = makeBasketball(spec.size, { emissiveIntensity: 0.18, seamWidth: 0.07 });
+  pivot.add(m);
+  return { pivot, mesh: m, ...spec };
+});
+
+// comet trails — palette-colored light; the balls stay basketballs
+const TRAIL_N = 56;
+const trailColors = moons.map(() => new THREE.Color(0xffffff));
+const trails = moons.map((moon, i) => {
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(TRAIL_N * 3), 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(TRAIL_N * 3), 3));
+  const line = new THREE.Line(geo, new THREE.LineBasicMaterial({
+    vertexColors: true, transparent: true,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  }));
+  moon.pivot.add(line);
+  return { geo, moon, index: i };
+});
+
+// --- the words: the motto rides the outermost orbit ----------------------------------------
+function wordSprite(text) {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 128;
+  const g = c.getContext('2d');
+  g.font = '700 64px Menlo, "SF Mono", monospace';
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.fillStyle = '#F2E9C7';
+  g.fillText(text, 256, 64);
+  const tex = new THREE.CanvasTexture(c);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
+  s.scale.set(1.7, 0.42, 1);
+  return s;
+}
+const WORDS = ['THE', 'PASS', 'IS', 'THE', 'PLAY', '·', 'ALLEYOOP', '·'];
+const wordRing = new THREE.Group();
+wordRing.rotation.x = 0.24;
+WORDS.forEach((w, i) => {
+  const s = wordSprite(w);
+  const a = (i / WORDS.length) * TAU;
+  s.position.set(Math.cos(a) * 6.5, 0, Math.sin(a) * 6.5);
+  wordRing.add(s);
+});
+world.add(wordRing);
+
+// a satellite hoop — rim + net orbiting the system like a station
+const satHoop = new THREE.Group();
+const satRim = new THREE.Mesh(
+  new THREE.TorusGeometry(0.3, 0.04, 12, 48),
+  new THREE.MeshStandardMaterial({ color: BALL_ORANGE, emissive: BALL_ORANGE, emissiveIntensity: 0.6, roughness: 0.5 })
+);
+satRim.rotation.x = Math.PI / 2;
+satHoop.add(satRim);
+satHoop.add(makeNet(0.28, { color: 0xF2E9C7, emissiveIntensity: 0.35, tiers: 2, strands: 6, depth: 0.3 }));
+const satPivot = new THREE.Group();
+satPivot.rotation.x = -0.45;
+satPivot.add(satHoop);
+world.add(satPivot);
+
+// --- palette switching --------------------------------------------------------------------
+const btn = document.getElementById('paletteBtn');
+function applyPalette(p) {
+  scene.background = new THREE.Color(p.space);
+  starMat.color.set(p.stars);
+  ringMats.forEach((m, i) => m.color.set(p.rings[i % p.rings.length]));
+  trailColors.forEach((c, i) => c.set(p.trails[i % p.trails.length]));
+  btn.textContent = 'PALETTE · ' + p.name;
+}
+btn.onclick = () => {
+  paletteIndex = (paletteIndex + 1) % PALETTES.length;
+  applyPalette(PALETTES[paletteIndex]);
+};
+applyPalette(PALETTES[0]);
+
+// --- animate ---------------------------------------------------------------------------------
+const clock = new THREE.Clock();
+const frameEl = document.getElementById('frame');
+
+function resize() {
+  const w = frameEl.clientWidth || innerWidth, h = frameEl.clientHeight || innerHeight;
+  renderer.setSize(w, h, false);
+  composer.setSize(w, h);
+  camera.aspect = w / h;
+  fitFov(camera, 40, 50);
+  // portrait: scale the whole system down so the outer orbit + trail stay in frame
+  const s = Math.min(1, Math.max(0.62, camera.aspect / 1.45));
+  world.scale.setScalar(s);
+}
+addEventListener('frame-resize', resize);
+mountViewframe();
+resize();
+
+renderer.setAnimationLoop(() => {
+  const t = (clock.getElapsedTime() % LOOP_SECONDS) / LOOP_SECONDS;
+
+  sunBall.rotation.y = t * TAU;                     // 1 turn per loop
+  stars.rotation.y = Math.sin(t * TAU) * 0.012;     // sway, returns to 0 at the seam
+
+  for (const moon of moons) {
+    const a = (t * moon.orbits + moon.phase) * TAU;
+    moon.mesh.position.set(Math.cos(a) * moon.radius, 0, Math.sin(a) * moon.radius);
+    moon.mesh.rotation.y = a * 2;
+  }
+
+  for (const { geo, moon, index } of trails) {
+    const a = (t * moon.orbits + moon.phase) * TAU;
+    const posAttr = geo.attributes.position, colAttr = geo.attributes.color;
+    const c = trailColors[index];
+    for (let k = 0; k < TRAIL_N; k++) {
+      const ak = a - k * 0.02 * TAU * Math.max(1, moon.orbits);
+      posAttr.setXYZ(k, Math.cos(ak) * moon.radius, 0, Math.sin(ak) * moon.radius);
+      const f = Math.pow(1 - k / TRAIL_N, 2) * 0.9;
+      colAttr.setXYZ(k, c.r * f, c.g * f, c.b * f);
+    }
+    posAttr.needsUpdate = colAttr.needsUpdate = true;
+  }
+
+  // the words orbit — one revolution per loop, seamless
+  wordRing.rotation.y = -t * TAU;
+
+  // satellite hoop — two orbits per loop, spinning slowly
+  const sa = (t * 2 + 0.5) * TAU;
+  satHoop.position.set(Math.cos(sa) * 4.7, 0, Math.sin(sa) * 4.7);
+  satHoop.rotation.z = t * TAU;
+
+  camera.position.y = 2.2 + Math.sin(t * TAU) * 0.25;
+  camera.lookAt(0, 0, 0);
+
+  composer.render();
+});
+</script>
+</body>
+</html>

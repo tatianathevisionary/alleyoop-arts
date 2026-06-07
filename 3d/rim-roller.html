@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALLEYOOP — Game Point (the rim roller)</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0E0E0E; overflow: hidden; color: #F2E9C7; }
+  .tag { position: fixed; left: 24px; bottom: 20px; font: 500 13px/1.4 ui-monospace, Menlo, monospace;
+         color: #F2E9C7; letter-spacing: .12em; user-select: none; }
+  .tag b { letter-spacing: .18em; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="frame"><canvas id="scene"></canvas></div>
+<div class="tag"><b>ALLEYOOP</b> · game point · 5s loop · the shot that never decides</div>
+<script type="module">
+import * as THREE from 'three';
+import { mountViewframe, fitFov } from './viewframe.js';
+import { makeBasketball, makeNet, BALL_ORANGE } from './basketball.js';
+
+// golden hour, dust in the air, one ball circling the rim forever
+const SKY = 0x88BBCC, CREAM = 0xF2E9C7, CHARCOAL = 0x223333, OCHRE = 0xE09432;
+const LOOP_SECONDS = 5, TAU = Math.PI * 2;
+
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene'), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(SKY);
+scene.fog = new THREE.Fog(SKY, 14, 34);
+
+const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 60);
+camera.position.set(2.6, 4.2, 4.6);
+camera.lookAt(0, 3.0, 0);
+
+const sun = new THREE.DirectionalLight(0xFFD9A0, 2.8);
+sun.position.set(-8, 6, 4);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = sun.shadow.camera.bottom = -6;
+sun.shadow.camera.right = sun.shadow.camera.top = 6;
+sun.shadow.radius = 6;
+scene.add(sun, new THREE.HemisphereLight(SKY, OCHRE, 0.9));
+
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(50, 50),
+  new THREE.MeshStandardMaterial({ color: 0x40815D, roughness: 0.95 })
+);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// hoop: pole, board, the wide rim under judgment, net
+const HOOP = new THREE.Vector3(0, 3.05, 0);
+const inkMat = new THREE.MeshStandardMaterial({ color: CHARCOAL, roughness: 0.6 });
+const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 3.9, 12), inkMat);
+pole.position.set(0.62, 1.95, 0);
+pole.castShadow = true;
+scene.add(pole);
+const board = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.05, 1.5),
+  new THREE.MeshStandardMaterial({ color: CREAM, roughness: 0.85 }));
+board.position.set(0.56, 3.47, 0);
+board.castShadow = true;
+scene.add(board);
+const rim = new THREE.Mesh(new THREE.TorusGeometry(0.52, 0.05, 20, 96),
+  new THREE.MeshStandardMaterial({ color: BALL_ORANGE, roughness: 0.45 }));
+rim.rotation.x = Math.PI / 2;
+rim.position.copy(HOOP);
+rim.castShadow = true;
+scene.add(rim);
+const net = makeNet(0.5, { color: CREAM });
+net.position.copy(HOOP);
+scene.add(net);
+
+// the ball: circling the inside edge — leaning in, never deciding
+const R = 0.3;
+const ball = makeBasketball(R, { castShadow: true, seamWidth: 0.07 });
+scene.add(ball);
+
+// golden dust motes hanging in the light — the held breath
+const MOTES = 120;
+const moteGeo = new THREE.BufferGeometry();
+const motePos = new Float32Array(MOTES * 3);
+const moteSeed = [];
+for (let i = 0; i < MOTES; i++) {
+  moteSeed.push([(Math.random() - 0.5) * 6, 1.5 + Math.random() * 3.4, (Math.random() - 0.5) * 6, Math.random() * TAU]);
+}
+moteGeo.setAttribute('position', new THREE.BufferAttribute(motePos, 3));
+scene.add(new THREE.Points(moteGeo, new THREE.PointsMaterial({
+  color: 0xFFE9C0, size: 0.045, transparent: true, opacity: 0.75,
+  blending: THREE.AdditiveBlending, depthWrite: false,
+})));
+
+const clock = new THREE.Clock();
+const frameEl = document.getElementById('frame');
+function resize() {
+  const w = frameEl.clientWidth || innerWidth, h = frameEl.clientHeight || innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  fitFov(camera, 36, 44);
+}
+addEventListener('frame-resize', resize);
+mountViewframe();
+resize();
+
+renderer.setAnimationLoop(() => {
+  const t = (clock.getElapsedTime() % LOOP_SECONDS) / LOOP_SECONDS;
+
+  // two laps of the rim per loop, with a wobble that breathes but never falls
+  const a = t * TAU * 2;
+  const orbitR = 0.34 + Math.sin(t * TAU) * 0.03;
+  ball.position.set(
+    HOOP.x + Math.cos(a) * orbitR,
+    HOOP.y + 0.16 + Math.sin(t * TAU * 2) * 0.045,
+    HOOP.z + Math.sin(a) * orbitR
+  );
+  ball.rotation.y = -a * 2.2;      // rolling along the iron
+  ball.rotation.x = 0.35;
+  rim.scale.setScalar(1 + Math.sin(t * TAU * 4) * 0.012);   // the iron hums
+
+  // motes drift in tiny seamless circles
+  for (let i = 0; i < MOTES; i++) {
+    const [x, y, z, ph] = moteSeed[i];
+    motePos.set([
+      x + Math.cos(t * TAU + ph) * 0.08,
+      y + Math.sin(t * TAU + ph * 2) * 0.06,
+      z + Math.sin(t * TAU + ph) * 0.08,
+    ], i * 3);
+  }
+  moteGeo.attributes.position.needsUpdate = true;
+
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

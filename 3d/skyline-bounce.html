@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALLEYOOP — Skyline Bounce (the city plays)</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0B0B14; overflow: hidden; color: #F2E9C7; }
+  .tag { position: fixed; left: 24px; bottom: 20px; font: 500 13px/1.4 ui-monospace, Menlo, monospace;
+         color: #F2E9C7; letter-spacing: .12em; user-select: none; }
+  .tag b { letter-spacing: .18em; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="frame"><canvas id="scene"></canvas></div>
+<div class="tag"><b>ALLEYOOP</b> · skyline bounce · 6s loop · the ball is the size of the dream</div>
+<script type="module">
+import * as THREE from 'three';
+import { mountViewframe, fitFov } from './viewframe.js';
+import { makeBasketball } from './basketball.js';
+
+const VIOLET = 0x251E4A, CORAL = 0xE2726D, CREAM = 0xF2E9C7;
+const LOOP_SECONDS = 6, TAU = Math.PI * 2;
+const R = 2.6;                      // a giant among towers
+const BOUNCES = 3, TRACK = 36;      // street scrolls one track-length per loop
+
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene'), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(VIOLET);
+scene.fog = new THREE.Fog(VIOLET, 30, 85);
+
+const camera = new THREE.PerspectiveCamera(44, 1, 0.1, 140);
+camera.position.set(0, 5.5, 26);    // center of the avenue, looking down the canyon
+camera.lookAt(0, 6.5, -10);
+
+const moon = new THREE.DirectionalLight(0xAFC4F0, 1.5);
+moon.position.set(-10, 20, 8);
+moon.castShadow = true;
+moon.shadow.mapSize.set(2048, 2048);
+moon.shadow.camera.left = moon.shadow.camera.bottom = -24;
+moon.shadow.camera.right = moon.shadow.camera.top = 24;
+scene.add(moon);
+scene.add(new THREE.HemisphereLight(0x3A6DB0, 0xE2726D, 0.7));
+const glow = new THREE.PointLight(CORAL, 60, 60);
+glow.position.set(8, 10, -20);
+scene.add(glow);
+
+// street
+const street = new THREE.Mesh(
+  new THREE.PlaneGeometry(40, 160),
+  new THREE.MeshStandardMaterial({ color: 0x101522, roughness: 0.35, metalness: 0.5 })
+);
+street.rotation.x = -Math.PI / 2;
+street.receiveShadow = true;
+scene.add(street);
+
+// towers with lit windows — two rows, treadmill-wrapped down the street
+function windowTexture() {
+  const c = document.createElement('canvas');
+  c.width = 128; c.height = 256;
+  const g = c.getContext('2d');
+  g.fillStyle = '#161228';
+  g.fillRect(0, 0, 128, 256);
+  for (let y = 8; y < 248; y += 13) for (let x = 8; x < 120; x += 15) {
+    if (Math.random() < 0.4) {
+      g.fillStyle = Math.random() < 0.78 ? 'rgba(242,233,199,0.95)' : 'rgba(226,114,109,0.95)';
+      g.fillRect(x, y, 8, 6);
+    }
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+const winTex = windowTexture();
+const towers = [];
+const N_PER_SIDE = 6;
+for (const side of [-1, 1]) {
+  for (let i = 0; i < N_PER_SIDE; i++) {
+    const w = 5 + (i % 3) * 1.4, h = 14 + ((i * 7) % 5) * 4;
+    const tw = new THREE.Mesh(new THREE.BoxGeometry(w, h, 5.5), new THREE.MeshBasicMaterial({ map: winTex }));
+    tw.position.set(side * (8.5 + (i % 2) * 1.5), h / 2, 0);
+    scene.add(tw);
+    towers.push({ tw, base: -i * (TRACK / N_PER_SIDE), h });
+  }
+}
+
+// the giant ball
+const ball = makeBasketball(R, { castShadow: true, seamWidth: 0.05 });
+scene.add(ball);
+
+// impact magic: an expanding cream ring + dust sparkles at each touch
+const ringGeo = new THREE.TorusGeometry(1, 0.05, 8, 64);
+const rings = Array.from({ length: BOUNCES }, () => {
+  const m = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: CREAM, transparent: true, opacity: 0 }));
+  m.rotation.x = Math.PI / 2;
+  m.position.y = 0.06;
+  scene.add(m);
+  return m;
+});
+
+const clock = new THREE.Clock();
+const frameEl = document.getElementById('frame');
+function resize() {
+  const w = frameEl.clientWidth || innerWidth, h = frameEl.clientHeight || innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  fitFov(camera, 44, 56);
+}
+addEventListener('frame-resize', resize);
+mountViewframe();
+resize();
+
+renderer.setAnimationLoop(() => {
+  const t = (clock.getElapsedTime() % LOOP_SECONDS) / LOOP_SECONDS;
+
+  // towers scroll past — the giant bounces "down" an endless avenue
+  const scroll = t * TRACK;
+  for (const { tw, base, h } of towers) {
+    let z = ((base + scroll) % TRACK + TRACK) % TRACK;
+    tw.position.z = z - TRACK + 8;
+    tw.position.y = h / 2;
+  }
+
+  // giant bounce in place — slow, weighty
+  const hop = Math.abs(Math.sin(Math.PI * BOUNCES * t));
+  ball.position.set(0, R + Math.pow(hop, 0.85) * 7.5, -4);
+  ball.rotation.x = -t * TAU;            // one majestic revolution per loop
+  const squash = 1 - 0.12 * Math.exp(-Math.pow((ball.position.y - R) / 0.6, 2));
+  ball.scale.set(2 - squash, squash, 2 - squash).multiplyScalar(0.5 + 0.5 * squash);
+
+  // impact rings: each bounce leaves a shockwave that grows and fades
+  for (let i = 0; i < BOUNCES; i++) {
+    const ph = ((t * BOUNCES - i - 0.0) % BOUNCES + BOUNCES) % BOUNCES;  // 0 at this bounce's contact
+    const life = ph / 1.2;
+    const m = rings[i];
+    if (life > 0 && life < 1) {
+      m.position.x = 0; m.position.z = -4;
+      m.scale.setScalar(1 + life * 9);
+      m.material.opacity = (1 - life) * 0.55;
+    } else m.material.opacity = 0;
+  }
+
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

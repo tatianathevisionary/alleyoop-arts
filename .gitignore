@@ -2,3 +2,10 @@
 __pycache__/
 *.pyc
 .env
+
+# video renders — 290MB+, never in git history; masters live locally / in cloud storage
+3d/renders/
+
+# recorder scratch
+3d/*.webm
+node_modules/

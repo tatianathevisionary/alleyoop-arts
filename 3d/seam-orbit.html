@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALLEYOOP — Seam Orbit (loop prototype)</title>
+<style>
+  /* Brand palette only: Ink Black #0E0E0E · Court Cream #F2E9C7 · Alleyoop Orange #EE9933 */
+  html, body { margin: 0; height: 100%; background: #0E0E0E; overflow: hidden; color: #F2E9C7; }
+  .tag {
+    position: fixed; left: 24px; bottom: 20px;
+    font: 500 13px/1.4 ui-monospace, "SF Mono", Menlo, monospace;
+    color: #F2E9C7; letter-spacing: .12em; user-select: none;
+  }
+  .tag b { letter-spacing: .18em; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+<div id="frame"><canvas id="scene"></canvas></div>
+<div class="tag"><b>ALLEYOOP</b> · seam orbit · 8s loop</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { mountViewframe } from './viewframe.js';
+
+const CREAM  = 0xF2E9C7;
+const INK    = 0x0E0E0E;
+const ORANGE = 0xEE9933;
+const LOOP_SECONDS = 8;
+
+// --- pebble-grain bump map, generated procedurally -------------------------
+// Random soft dots on mid-gray = the ball's leather at macro distance.
+function pebbleTexture(size = 1024, count = 9000) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const g = c.getContext('2d');
+  g.fillStyle = '#808080';
+  g.fillRect(0, 0, size, size);
+  for (let i = 0; i < count; i++) {
+    const x = Math.random() * size, y = Math.random() * size;
+    const r = 2.2 + Math.random() * 3.4;
+    const grad = g.createRadialGradient(x, y, 0, x, y, r);
+    grad.addColorStop(0, 'rgba(255,255,255,0.55)');
+    grad.addColorStop(0.7, 'rgba(255,255,255,0.12)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = grad;
+    g.beginPath();
+    g.arc(x, y, r, 0, Math.PI * 2);
+    g.fill();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(4, 2);
+  return tex;
+}
+
+// --- renderer / scene / camera ---------------------------------------------
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene'), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(INK);
+
+const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
+camera.position.set(0, 0.55, 3.1);     // close — the ball becomes landscape
+camera.lookAt(0, 0.1, 0);
+
+// --- lights: one hard raking key for the specular streak, faint cream fill --
+const key = new THREE.DirectionalLight(0xffffff, 3.2);
+key.position.set(-4, 2.5, 2);
+scene.add(key);
+const fill = new THREE.DirectionalLight(CREAM, 0.25);
+fill.position.set(3, -1, 4);
+scene.add(fill);
+scene.add(new THREE.AmbientLight(CREAM, 0.12));
+
+// --- the ball ---------------------------------------------------------------
+const ball = new THREE.Mesh(
+  new THREE.SphereGeometry(2, 128, 128),
+  new THREE.MeshStandardMaterial({
+    color: ORANGE,
+    roughness: 0.52,
+    metalness: 0.0,
+    bumpMap: pebbleTexture(),
+    bumpScale: 1.4,
+  })
+);
+scene.add(ball);
+
+// seam channels — real basketball layout, bold: equator + meridian + 2 side channels
+const seamMat = new THREE.MeshStandardMaterial({ color: 0x223333, roughness: 0.75 });
+const eq = new THREE.Mesh(new THREE.TorusGeometry(2.004, 0.04, 12, 200), seamMat);
+eq.rotation.x = Math.PI / 2;
+ball.add(eq);
+ball.add(new THREE.Mesh(new THREE.TorusGeometry(2.004, 0.04, 12, 200), seamMat));
+const d = 0.56 * 2, sr = Math.sqrt(4 - d * d);
+for (const s of [-1, 1]) {
+  const c = new THREE.Mesh(new THREE.TorusGeometry(sr + 0.004, 0.04, 12, 200), seamMat);
+  c.position.z = s * d;
+  ball.add(c);
+}
+
+// --- animate: exactly 360° per loop = seam-free by definition ---------------
+const clock = new THREE.Clock();
+
+const frameEl = document.getElementById('frame');
+function resize() {
+  const w = frameEl.clientWidth || innerWidth, h = frameEl.clientHeight || innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+addEventListener('frame-resize', resize);
+mountViewframe();
+resize();
+
+renderer.setAnimationLoop(() => {
+  const t = (clock.getElapsedTime() % LOOP_SECONDS) / LOOP_SECONDS;
+  ball.rotation.y = t * Math.PI * 2;          // the one move
+  ball.rotation.x = Math.sin(t * Math.PI * 2) * 0.03;  // breath — returns to 0 at loop end
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALLEYOOP — 3D Loop Lab</title>
+<style>
+  /* Brand wrapper: Ink Black #0E0E0E · Court Cream #F2E9C7 · Alleyoop Orange #EE9933 */
+  :root {
+    --ink: #0E0E0E;
+    --cream: #F2E9C7;
+    --orange: #EE9933;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh;
+    background: var(--cream); color: var(--ink);
+    font: 400 16px/1.5 ui-monospace, "SF Mono", Menlo, monospace;
+    padding: 48px 32px 64px;
+  }
+  header { max-width: 1100px; margin: 0 auto 40px; }
+  h1 {
+    font-size: 28px; font-weight: 700; letter-spacing: .22em;
+    margin: 0 0 4px;
+  }
+  h1 .oo { border-bottom: 3px solid var(--orange); }
+  .sub { font-size: 13px; letter-spacing: .12em; opacity: .65; }
+  .grid {
+    max-width: 1100px; margin: 0 auto;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    gap: 28px;
+  }
+  .card {
+    border: 2px solid var(--ink);
+    background: var(--cream);
+  }
+  .card iframe {
+    display: block; width: 100%; aspect-ratio: 4 / 3;
+    border: 0; border-bottom: 2px solid var(--ink);
+  }
+  .card .meta {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 14px 16px;
+  }
+  .card .name { font-weight: 700; letter-spacing: .14em; font-size: 14px; }
+  .card a {
+    color: var(--ink); text-decoration: none;
+    font-size: 12px; letter-spacing: .1em;
+    border-bottom: 2px solid var(--orange);
+    padding-bottom: 1px;
+  }
+  .card a:hover { color: var(--orange); }
+  .soon {
+    display: grid; place-items: center;
+    aspect-ratio: 4 / 3; border-bottom: 2px solid var(--ink);
+    font-size: 12px; letter-spacing: .18em; opacity: .45;
+  }
+  footer {
+    max-width: 1100px; margin: 48px auto 0;
+    font-size: 12px; letter-spacing: .1em; opacity: .55;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>ALLEY<span class="oo">OO</span>P · MOTION GALLERY</h1>
+  <div class="sub">digital basketball motion art · three.js previz → cinema 4d / redshift · internal, not for publishing<br>
+  every piece has a FILL / 16:9 (youtube) / 9:16 (reels) / 1:1 toggle, top-right in fullscreen</div>
+</header>
+
+<div class="grid">
+  <div class="card">
+    <iframe src="brand-intro.html" loading="lazy" title="Brand Intro"></iframe>
+    <div class="meta">
+      <span class="name">00 · BRAND INTRO — "THE PASS" · 12s</span>
+      <a href="brand-intro.html" target="_blank">fullscreen ↗</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <iframe src="neon-court.html" loading="lazy" title="Neon Court"></iframe>
+    <div class="meta">
+      <span class="name">08 · NEON COURT</span>
+      <a href="neon-court.html" target="_blank">fullscreen ↗</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <iframe src="gallery-space.html" loading="lazy" title="The Gallery"></iframe>
+    <div class="meta">
+      <span class="name">09 · THE GALLERY — EXHIBIT SPACE</span>
+      <a href="gallery-space.html" target="_blank">fullscreen ↗</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <iframe src="jungle-gym.html" loading="lazy" title="Basketball Jungle Gym"></iframe>
+    <div class="meta">
+      <span class="name">10 · BASKETBALL JUNGLE GYM</span>
+      <a href="jungle-gym.html" target="_blank">fullscreen ↗</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <iframe src="lob-loop.html" loading="lazy" title="The Shot"></iframe>
+    <div class="meta">
+      <span class="name">01 · THE SHOT</span>
+      <a href="lob-loop.html" target="_blank">fullscreen ↗</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <iframe src="seam-orbit.html" loading="lazy" title="Seam Orbit"></iframe>
+    <div class="meta">
+      <span class="name">06 · SEAM ORBIT</span>
+      <a href="seam-orbit.html" target="_blank">fullscreen ↗</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <iframe src="maze-run.html" loading="lazy" title="Maze Run"></iframe>
+    <div class="meta">
+      <span class="name">03 · MAZE RUN</span>
+      <a href="maze-run.html" target="_blank">fullscreen ↗</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <iframe src="galaxy.html" loading="lazy" title="Basketball Galaxy"></iframe>
+    <div class="meta">
+      <span class="name">07 · BASKETBALL GALAXY</span>
+      <a href="galaxy.html" target="_blank">fullscreen ↗</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <iframe src="rooftop-court.html" loading="lazy" title="Rooftop Court"></iframe>
+    <div class="meta"><span class="name">11 · ROOFTOP COURT</span><a href="rooftop-court.html" target="_blank">fullscreen ↗</a></div>
+  </div>
+  <div class="card">
+    <iframe src="skyline-bounce.html" loading="lazy" title="Skyline Bounce"></iframe>
+    <div class="meta"><span class="name">12 · SKYLINE BOUNCE</span><a href="skyline-bounce.html" target="_blank">fullscreen ↗</a></div>
+  </div>
+  <div class="card">
+    <iframe src="moon-bounce.html" loading="lazy" title="Moon Bounce"></iframe>
+    <div class="meta"><span class="name">13 · MOON BOUNCE</span><a href="moon-bounce.html" target="_blank">fullscreen ↗</a></div>
+  </div>
+  <div class="card">
+    <iframe src="vortex.html" loading="lazy" title="The Spin Move"></iframe>
+    <div class="meta"><span class="name">14 · THE SPIN MOVE</span><a href="vortex.html" target="_blank">fullscreen ↗</a></div>
+  </div>
+  <div class="card">
+    <iframe src="rim-tunnel.html" loading="lazy" title="The Walkout"></iframe>
+    <div class="meta"><span class="name">15 · THE WALKOUT</span><a href="rim-tunnel.html" target="_blank">fullscreen ↗</a></div>
+  </div>
+  <div class="card">
+    <iframe src="rain-of-balls.html" loading="lazy" title="The Tip-Off"></iframe>
+    <div class="meta"><span class="name">16 · THE TIP-OFF</span><a href="rain-of-balls.html" target="_blank">fullscreen ↗</a></div>
+  </div>
+  <div class="card">
+    <iframe src="the-wave.html" loading="lazy" title="The Wave"></iframe>
+    <div class="meta"><span class="name">17 · THE WAVE</span><a href="the-wave.html" target="_blank">fullscreen ↗</a></div>
+  </div>
+  <div class="card">
+    <iframe src="newtons-cradle.html" loading="lazy" title="Ballistic Still Life"></iframe>
+    <div class="meta"><span class="name">18 · BALLISTIC STILL LIFE</span><a href="newtons-cradle.html" target="_blank">fullscreen ↗</a></div>
+  </div>
+  <div class="card">
+    <iframe src="crossover.html" loading="lazy" title="Crossover"></iframe>
+    <div class="meta"><span class="name">19 · CROSSOVER</span><a href="crossover.html" target="_blank">fullscreen ↗</a></div>
+  </div>
+  <div class="card">
+    <iframe src="jumbotron.html" loading="lazy" title="Jumbotron"></iframe>
+    <div class="meta"><span class="name">20 · JUMBOTRON</span><a href="jumbotron.html" target="_blank">fullscreen ↗</a></div>
+  </div>
+  <div class="card">
+    <iframe src="stairs.html" loading="lazy" title="The Descent"></iframe>
+    <div class="meta"><span class="name">21 · THE DESCENT</span><a href="stairs.html" target="_blank">fullscreen ↗</a></div>
+  </div>
+  <div class="card">
+    <iframe src="rim-roller.html" loading="lazy" title="Game Point"></iframe>
+    <div class="meta"><span class="name">22 · GAME POINT</span><a href="rim-roller.html" target="_blank">fullscreen ↗</a></div>
+  </div>
+</div>
+
+<footer>
+  concepts: CONCEPTS.md · loops are seam-free by construction (closed splines, full rotations) ·
+  the pass is the play.
+</footer>
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALLEYOOP — Moon Bounce (planet hop)</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0B0B14; overflow: hidden; color: #F2E9C7; }
+  .tag { position: fixed; left: 24px; bottom: 20px; font: 500 13px/1.4 ui-monospace, Menlo, monospace;
+         color: #F2E9C7; letter-spacing: .12em; user-select: none; }
+  .tag b { letter-spacing: .18em; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="frame"><canvas id="scene"></canvas></div>
+<div class="tag"><b>ALLEYOOP</b> · moon bounce · 9s loop · low gravity, high hopes</div>
+<script type="module">
+import * as THREE from 'three';
+import { mountViewframe, fitFov } from './viewframe.js';
+import { makeBasketball } from './basketball.js';
+
+const SPACE = 0x0B0B14, CORAL = 0xE2726D, CREAM = 0xF2E9C7;
+const LOOP_SECONDS = 9, TAU = Math.PI * 2;
+const PLANET_R = 4.2, BALL = 0.36, HOPS = 12;
+
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene'), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(SPACE);
+const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 200);
+camera.position.set(0, 1.8, 13.5);
+camera.lookAt(0, 0.6, 0);
+
+const key = new THREE.DirectionalLight(0xffffff, 2.4);
+key.position.set(-6, 5, 6);
+scene.add(key);
+scene.add(new THREE.AmbientLight(0x404060, 0.7));
+const rimGlow = new THREE.PointLight(CORAL, 50, 80);
+rimGlow.position.set(9, -2, -6);
+scene.add(rimGlow);
+
+// stars
+const starGeo = new THREE.BufferGeometry();
+const sp = new Float32Array(1400 * 3);
+for (let i = 0; i < 1400; i++) {
+  const r = 60 + Math.random() * 50, th = Math.random() * TAU, ph = Math.acos(2 * Math.random() - 1);
+  sp[i * 3] = r * Math.sin(ph) * Math.cos(th);
+  sp[i * 3 + 1] = r * Math.sin(ph) * Math.sin(th);
+  sp[i * 3 + 2] = r * Math.cos(ph);
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(sp, 3));
+scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({
+  color: 0xCFE0FF, size: 0.4, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+})));
+
+// halo behind the planet — the magic backlight
+function glowSprite(colorStr) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 256;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+  grad.addColorStop(0, colorStr);
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 256, 256);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: new THREE.CanvasTexture(c), transparent: true,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  }));
+  return s;
+}
+const halo = glowSprite('rgba(226,114,109,0.55)');
+halo.scale.setScalar(PLANET_R * 4.4);
+halo.position.set(0, -PLANET_R + 1.4, -2);
+scene.add(halo);
+
+// the planet IS a basketball
+const planet = makeBasketball(PLANET_R, { seamWidth: 0.04 });
+planet.position.y = -PLANET_R + 1.4;
+scene.add(planet);
+
+// the little ball hops a full great circle per loop
+const ball = makeBasketball(BALL, { seamWidth: 0.07 });
+scene.add(ball);
+
+// sparkle burst at every contact — tiny stars kicked off the surface
+const SPARKS = 90;
+const sparkGeo = new THREE.BufferGeometry();
+const sparkPos = new Float32Array(SPARKS * 3);
+sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPos, 3));
+const sparkMat = new THREE.PointsMaterial({
+  color: CREAM, size: 0.09, transparent: true, opacity: 0,
+  blending: THREE.AdditiveBlending, depthWrite: false,
+});
+scene.add(new THREE.Points(sparkGeo, sparkMat));
+const sparkSeeds = Array.from({ length: SPARKS }, () => [
+  Math.random() * TAU, 0.3 + Math.random() * 1.1, Math.random() * 0.7,
+]);
+
+const clock = new THREE.Clock();
+const frameEl = document.getElementById('frame');
+function resize() {
+  const w = frameEl.clientWidth || innerWidth, h = frameEl.clientHeight || innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  fitFov(camera, 40, 52);
+}
+addEventListener('frame-resize', resize);
+mountViewframe();
+resize();
+
+renderer.setAnimationLoop(() => {
+  const t = (clock.getElapsedTime() % LOOP_SECONDS) / LOOP_SECONDS;
+
+  // ball hops back and forth across the visible top of the planet — never hides
+  const a = Math.PI / 2 + Math.sin(t * TAU) * 0.95;  // swings across the dome, seam-safe
+  const hop = Math.pow(Math.abs(Math.sin(Math.PI * HOPS * t)), 0.85) * 1.5;
+  const rr = PLANET_R + BALL + hop;
+  const cx = planet.position.x, cy = planet.position.y;
+  ball.position.set(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr, 0);
+  ball.rotation.z = a;                                // feet to the ground
+  ball.rotation.y += 0.03;
+  planet.rotation.z = t * TAU * 0;                    // planet holds still; the ball does the work
+  planet.rotation.y = t * TAU / 4;                    // slow turn under the hops — returns at 1/4…
+  planet.rotation.y = Math.sin(t * TAU) * 0.12;       // …no: sway instead, seam-safe
+
+  // sparkles at the contact point of the current hop
+  const contactPhase = (t * HOPS) % 1;                // 0 at touch
+  const burst = contactPhase < 0.45 ? contactPhase / 0.45 : -1;
+  if (burst >= 0) {
+    const hopIndex = Math.floor(t * HOPS);
+    const ca = Math.PI / 2 + Math.sin((hopIndex / HOPS) * TAU) * 0.95;  // where this hop touched
+    const px = cx + Math.cos(ca) * (PLANET_R + 0.1), py = cy + Math.sin(ca) * (PLANET_R + 0.1);
+    for (let i = 0; i < SPARKS; i++) {
+      const [sa, sv, sw] = sparkSeeds[i];
+      sparkPos.set([
+        px + Math.cos(sa) * sv * burst,
+        py + Math.sin(sa) * sv * burst + sw * burst,
+        (Math.sin(sa * 3) * 0.5) * burst,
+      ], i * 3);
+    }
+    sparkGeo.attributes.position.needsUpdate = true;
+    sparkMat.opacity = (1 - burst) * 0.85;
+  } else sparkMat.opacity = 0;
+
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

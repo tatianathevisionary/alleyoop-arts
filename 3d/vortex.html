@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALLEYOOP — The Spin Move (vortex)</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0B0B14; overflow: hidden; color: #F2E9C7; }
+  .tag { position: fixed; left: 24px; bottom: 20px; font: 500 13px/1.4 ui-monospace, Menlo, monospace;
+         color: #F2E9C7; letter-spacing: .12em; user-select: none; }
+  .tag b { letter-spacing: .18em; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="frame"><canvas id="scene"></canvas></div>
+<div class="tag"><b>ALLEYOOP</b> · the spin move · 8s loop · twenty-four balls, one storm</div>
+<script type="module">
+import * as THREE from 'three';
+import { mountViewframe, fitFov } from './viewframe.js';
+import { makeBasketball } from './basketball.js';
+
+const TEAL = 0x223333, ELECTRIC = 0x3A6DB0, CORAL = 0xE2726D, CREAM = 0xF2E9C7;
+const LOOP_SECONDS = 8, TAU = Math.PI * 2;
+const N = 24, HEIGHT = 8.5;
+
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene'), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(TEAL);
+scene.fog = new THREE.Fog(TEAL, 16, 36);
+
+const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 80);
+camera.position.set(0, 4.4, 12.5);
+camera.lookAt(0, 4.0, 0);
+
+const key = new THREE.DirectionalLight(0xFFF2D8, 2.2);
+key.position.set(6, 10, 6);
+scene.add(key);
+scene.add(new THREE.HemisphereLight(0x88BBCC, CORAL, 0.85));
+const core = new THREE.PointLight(CREAM, 30, 30);
+core.position.set(0, 4, 0);
+scene.add(core);
+
+// the floor the storm stands on — a faint glowing circle
+const ringPts = [];
+for (let i = 0; i <= 80; i++) ringPts.push(new THREE.Vector3(Math.cos(i / 80 * TAU) * 3.7, 0.02, Math.sin(i / 80 * TAU) * 3.7));
+scene.add(new THREE.Line(
+  new THREE.BufferGeometry().setFromPoints(ringPts),
+  new THREE.LineBasicMaterial({ color: ELECTRIC, transparent: true, opacity: 0.7 })
+));
+const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(60, 60),
+  new THREE.MeshStandardMaterial({ color: 0x1B2A2A, roughness: 0.85 })
+);
+floor.rotation.x = -Math.PI / 2;
+scene.add(floor);
+
+// the storm: balls climb a helix and wrap — identical balls = seamless wrap
+const balls = [];
+for (let i = 0; i < N; i++) {
+  const b = makeBasketball(0.3, { seamWidth: 0.07 });
+  scene.add(b);
+  balls.push(b);
+}
+
+// each ball trails a short ribbon of light
+const TRAIL_N = 14;
+const trails = balls.map((b, i) => {
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(TRAIL_N * 3), 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(TRAIL_N * 3), 3));
+  const l = new THREE.Line(geo, new THREE.LineBasicMaterial({
+    vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+  }));
+  scene.add(l);
+  return geo;
+});
+const cA = new THREE.Color(CORAL), cB = new THREE.Color(ELECTRIC), cT = new THREE.Color();
+
+function ballState(i, t, out) {
+  const u = ((i / N + t) % 1 + 1) % 1;          // 0 bottom → 1 top, wraps
+  const r = 3.6 - u * 2.3;                       // funnel narrows with height
+  const a = u * TAU * 3 + t * TAU;               // 3 twists + 1 storm-rev per loop
+  out.set(Math.cos(a) * r, 0.34 + u * HEIGHT, Math.sin(a) * r);
+  return a;
+}
+
+const clock = new THREE.Clock();
+const frameEl = document.getElementById('frame');
+const p = new THREE.Vector3(), q = new THREE.Vector3();
+function resize() {
+  const w = frameEl.clientWidth || innerWidth, h = frameEl.clientHeight || innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  fitFov(camera, 42, 50);
+}
+addEventListener('frame-resize', resize);
+mountViewframe();
+resize();
+
+renderer.setAnimationLoop(() => {
+  const t = (clock.getElapsedTime() % LOOP_SECONDS) / LOOP_SECONDS;
+  balls.forEach((b, i) => {
+    const a = ballState(i, t, p);
+    b.position.copy(p);
+    b.rotation.y = a * 2;
+    b.rotation.x = a;
+    // ribbon: a few breadcrumbs of where this slot just was
+    const geo = trails[i];
+    const posA = geo.attributes.position, colA = geo.attributes.color;
+    for (let k = 0; k < TRAIL_N; k++) {
+      ballState(i, ((t - k * 0.006) % 1 + 1) % 1, q);
+      posA.setXYZ(k, q.x, q.y, q.z);
+      const f = Math.pow(1 - k / TRAIL_N, 2) * 0.8;
+      cT.copy(cA).lerp(cB, (p.y / HEIGHT)).multiplyScalar(f);
+      colA.setXYZ(k, cT.r, cT.g, cT.b);
+    }
+    posA.needsUpdate = colA.needsUpdate = true;
+  });
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALLEYOOP — The Wave (bench mob)</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0E0E0E; overflow: hidden; color: #F2E9C7; }
+  .tag { position: fixed; left: 24px; bottom: 20px; font: 500 13px/1.4 ui-monospace, Menlo, monospace;
+         color: #F2E9C7; letter-spacing: .12em; user-select: none; }
+  .tag b { letter-spacing: .18em; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="frame"><canvas id="scene"></canvas></div>
+<div class="tag"><b>ALLEYOOP</b> · the wave · 4s loop · the bench believes</div>
+<script type="module">
+import * as THREE from 'three';
+import { mountViewframe, fitFov } from './viewframe.js';
+import { makeBasketball, BALL_ORANGE } from './basketball.js';
+
+const CREAM = 0xF2E9C7;
+const LOOP_SECONDS = 4, TAU = Math.PI * 2;
+const N = 9, R = 0.34, GAP = 1.05;
+
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene'), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(CREAM);
+const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 50);
+camera.position.set(0, 1.7, 9.5);
+camera.lookAt(0, 1.0, 0);
+
+const key = new THREE.DirectionalLight(0xffffff, 2.6);
+key.position.set(3, 7, 5);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.left = key.shadow.camera.bottom = -7;
+key.shadow.camera.right = key.shadow.camera.top = 7;
+key.shadow.radius = 8;
+scene.add(key, new THREE.HemisphereLight(CREAM, 0xCBBF9A, 1.1));
+
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({ opacity: 0.15 }));
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+scene.add(floor);
+
+// nine balls on the bench — the wave rolls through them, left to right, forever
+const balls = [];
+for (let i = 0; i < N; i++) {
+  const b = makeBasketball(R, { castShadow: true, seamWidth: 0.06 });
+  b.position.set((i - (N - 1) / 2) * GAP, R, 0);
+  scene.add(b);
+  balls.push(b);
+}
+
+// each hop leaves a small arc of orange light hanging for a beat
+const arcMats = [];
+balls.forEach((b, i) => {
+  const pts = [];
+  for (let k = 0; k <= 16; k++) {
+    const p = k / 16;
+    pts.push(new THREE.Vector3(b.position.x, R + Math.sin(p * Math.PI) * 1.5, 0));
+  }
+  const m = new THREE.LineBasicMaterial({ color: BALL_ORANGE, transparent: true, opacity: 0 });
+  arcMats.push(m);
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), m));
+});
+
+const clock = new THREE.Clock();
+const frameEl = document.getElementById('frame');
+function resize() {
+  const w = frameEl.clientWidth || innerWidth, h = frameEl.clientHeight || innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  fitFov(camera, 36, 50);
+}
+addEventListener('frame-resize', resize);
+mountViewframe();
+resize();
+
+renderer.setAnimationLoop(() => {
+  const t = (clock.getElapsedTime() % LOOP_SECONDS) / LOOP_SECONDS;
+  balls.forEach((b, i) => {
+    // the wave: each ball's hop fires in sequence; phase wraps cleanly
+    const ph = ((t - i / N) % 1 + 1) % 1;
+    const hop = ph < 0.28 ? Math.sin((ph / 0.28) * Math.PI) : 0;
+    const y = R + Math.pow(hop, 0.9) * 1.5;
+    b.position.y = y;
+    const squash = 1 - 0.16 * Math.exp(-Math.pow((y - R) / 0.08, 2));
+    b.scale.set(2 - squash, squash, 2 - squash).multiplyScalar(0.5 + 0.5 * squash);
+    b.rotation.z = -hop * 0.5;
+    // the light arc glows just after the hop, then lets go
+    const after = ph - 0.28;
+    arcMats[i].opacity = (after > 0 && after < 0.22) ? (1 - after / 0.22) * 0.5 : 0;
+  });
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

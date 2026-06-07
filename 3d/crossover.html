@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALLEYOOP — Crossover (infinity dribble)</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0E0E0E; overflow: hidden; color: #F2E9C7; }
+  .tag { position: fixed; left: 24px; bottom: 20px; font: 500 13px/1.4 ui-monospace, Menlo, monospace;
+         color: #F2E9C7; letter-spacing: .12em; user-select: none; }
+  .tag b { letter-spacing: .18em; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="frame"><canvas id="scene"></canvas></div>
+<div class="tag"><b>ALLEYOOP</b> · crossover · 6s loop · the handle writes infinity</div>
+<script type="module">
+import * as THREE from 'three';
+import { mountViewframe, fitFov } from './viewframe.js';
+import { makeBasketball, dribbleY, BALL_ORANGE } from './basketball.js';
+
+const CHARCOAL = 0x223333, CREAM = 0xF2E9C7;
+const LOOP_SECONDS = 6, TAU = Math.PI * 2;
+const R = 0.34, HOPS = 12;
+
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene'), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(CHARCOAL);
+const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 50);
+camera.position.set(0, 6.5, 5.4);
+camera.lookAt(0, 0, 0);
+
+const key = new THREE.DirectionalLight(0xFFF4DC, 2.4);
+key.position.set(3, 8, 4);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.left = key.shadow.camera.bottom = -6;
+key.shadow.camera.right = key.shadow.camera.top = 6;
+key.shadow.radius = 6;
+scene.add(key, new THREE.HemisphereLight(0x88BBCC, CREAM, 0.8));
+
+const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(40, 40),
+  new THREE.MeshStandardMaterial({ color: 0x1B2A2A, roughness: 0.8 })
+);
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+scene.add(floor);
+
+// the path, painted on the floor in orange — the move leaves its signature
+const lemniscate = p => {
+  const a = p * TAU;
+  return [2.3 * Math.sin(a), 1.35 * Math.sin(2 * a)];
+};
+const pathPts = [];
+for (let i = 0; i <= 140; i++) {
+  const [x, z] = lemniscate(i / 140);
+  pathPts.push(new THREE.Vector3(x, 0.02, z));
+}
+scene.add(new THREE.Line(
+  new THREE.BufferGeometry().setFromPoints(pathPts),
+  new THREE.LineBasicMaterial({ color: BALL_ORANGE, transparent: true, opacity: 0.85 })
+));
+
+const ball = makeBasketball(R, { castShadow: true, seamWidth: 0.06 });
+scene.add(ball);
+
+const clock = new THREE.Clock();
+const frameEl = document.getElementById('frame');
+const prev = new THREE.Vector3();
+function resize() {
+  const w = frameEl.clientWidth || innerWidth, h = frameEl.clientHeight || innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  fitFov(camera, 40, 50);
+}
+addEventListener('frame-resize', resize);
+mountViewframe();
+resize();
+
+renderer.setAnimationLoop(() => {
+  const t = (clock.getElapsedTime() % LOOP_SECONDS) / LOOP_SECONDS;
+  const [x, z] = lemniscate(t);
+  prev.copy(ball.position);
+  ball.position.set(x, dribbleY(t, HOPS, 0.95, R), z);
+  const squash = 1 - 0.18 * Math.exp(-Math.pow((ball.position.y - R) / 0.1, 2));
+  ball.scale.set(2 - squash, squash, 2 - squash).multiplyScalar(0.5 + 0.5 * squash);
+  ball.rotation.y = Math.atan2(x - prev.x, z - prev.z);
+  ball.rotation.x += 0.05;
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

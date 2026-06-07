@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALLEYOOP — THE HUNDRED</title>
+<style>
+  :root { --ink: #0E0E0E; --cream: #F2E9C7; --orange: #EE9933; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cream); color: var(--ink);
+         font: 400 15px/1.5 ui-monospace, "SF Mono", Menlo, monospace; padding: 44px 28px 70px; }
+  header { max-width: 1200px; margin: 0 auto 34px; }
+  h1 { font-size: 26px; font-weight: 800; letter-spacing: .2em; margin: 0 0 6px; }
+  h1 .oo { border-bottom: 3px solid var(--orange); }
+  .sub { font-size: 12px; letter-spacing: .12em; opacity: .6; }
+  .grid { max-width: 1200px; margin: 0 auto;
+          display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 18px; }
+  .card { border: 2px solid var(--ink); background: var(--cream); cursor: pointer; }
+  .card .stage { aspect-ratio: 4/3; background: var(--ink); display: grid; place-items: center;
+                 color: var(--cream); font-size: 11px; letter-spacing: .2em; position: relative; }
+  .card .stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .card .meta { display: flex; justify-content: space-between; align-items: baseline;
+                padding: 10px 12px; border-top: 2px solid var(--ink); }
+  .card .num { font-size: 11px; opacity: .5; letter-spacing: .14em; }
+  .card .name { font-weight: 700; font-size: 12.5px; letter-spacing: .1em; }
+  .card a { color: var(--ink); text-decoration: none; font-size: 11px;
+            border-bottom: 2px solid var(--orange); }
+  .card a:hover { color: var(--orange); }
+</style>
+</head>
+<body>
+<header>
+  <h1>ALLEY<span class="oo">OO</span>P · THE HUNDRED</h1>
+  <div class="sub">pieces 023–122 · one generative engine, one hundred works · click a card to wake it ·
+  every piece: seamless loop, real basketball, FILL/16:9/9:16/1:1 toggle in fullscreen</div>
+</header>
+<div class="grid" id="grid"></div>
+
+<script type="module">
+import { PIECES } from './pieces.js';
+
+const grid = document.getElementById('grid');
+PIECES.forEach((p, i) => {
+  const id = i + 1, num = String(id + 22).padStart(3, '0');
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `
+    <div class="stage" data-id="${id}"><span>▶ ${p.fam.toUpperCase()} · ${p.pal.toUpperCase()}</span></div>
+    <div class="meta">
+      <span><span class="num">${num} · </span><span class="name">${p.title.toUpperCase()}</span></span>
+      <a href="piece.html?id=${id}" target="_blank">open ↗</a>
+    </div>`;
+  card.querySelector('.stage').addEventListener('click', e => {
+    const st = e.currentTarget;
+    if (!st.querySelector('iframe')) {
+      const f = document.createElement('iframe');
+      f.src = `piece.html?id=${st.dataset.id}`;
+      f.loading = 'lazy';
+      st.appendChild(f);
+    }
+  }, { once: true });
+  grid.appendChild(card);
+});
+</script>
+</body>
+</html>

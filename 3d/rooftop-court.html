@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALLEYOOP — Rooftop Court (blue hour)</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0B0B14; overflow: hidden; color: #F2E9C7; }
+  .tag { position: fixed; left: 24px; bottom: 20px; font: 500 13px/1.4 ui-monospace, Menlo, monospace;
+         color: #F2E9C7; letter-spacing: .12em; user-select: none; }
+  .tag b { letter-spacing: .18em; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="frame"><canvas id="scene"></canvas></div>
+<div class="tag"><b>ALLEYOOP</b> · rooftop court · 8s loop · the city plays late</div>
+<script type="module">
+import * as THREE from 'three';
+import { mountViewframe, fitFov } from './viewframe.js';
+import { makeBasketball, makeNet, bankShotPoints, dribbleY, BALL_ORANGE } from './basketball.js';
+
+// Neon Night dusk: midnight violet sky, electric haze, coral glow (style guide)
+const VIOLET = 0x251E4A, ELECTRIC = 0x3A6DB0, CORAL = 0xE2726D, CREAM = 0xF2E9C7, CHARCOAL = 0x223333;
+const LOOP_SECONDS = 8, TAU = Math.PI * 2;
+const R = 0.34;
+
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene'), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(VIOLET);
+scene.fog = new THREE.Fog(VIOLET, 30, 80);
+
+const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 120);
+camera.position.set(-7.5, 3.2, 8.5);
+camera.lookAt(0.5, 1.6, -1);
+
+// dusk light: cool key + the city's warm bounce
+const key = new THREE.DirectionalLight(0x9FB8E8, 1.6);
+key.position.set(-6, 9, 6);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.left = key.shadow.camera.bottom = -10;
+key.shadow.camera.right = key.shadow.camera.top = 10;
+key.shadow.radius = 6;
+scene.add(key);
+scene.add(new THREE.HemisphereLight(0x3A6DB0, 0xE2726D, 0.8));
+const sunset = new THREE.PointLight(CORAL, 40, 90);
+sunset.position.set(-30, 6, -30);
+scene.add(sunset);
+
+// --- the skyline: towers of lit windows (one shared canvas texture) -----------------
+function windowTexture() {
+  const c = document.createElement('canvas');
+  c.width = 128; c.height = 256;
+  const g = c.getContext('2d');
+  g.fillStyle = '#151226';
+  g.fillRect(0, 0, 128, 256);
+  for (let y = 8; y < 248; y += 14) for (let x = 8; x < 120; x += 16) {
+    if (Math.random() < 0.42) {
+      g.fillStyle = Math.random() < 0.8 ? 'rgba(242,233,199,0.9)' : 'rgba(226,114,109,0.9)';
+      g.fillRect(x, y, 8, 7);
+    }
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+const winTex = windowTexture();
+for (let i = 0; i < 26; i++) {
+  const w = 4 + Math.random() * 5, h = 10 + Math.random() * 22;
+  const tower = new THREE.Mesh(
+    new THREE.BoxGeometry(w, h, w),
+    new THREE.MeshBasicMaterial({ map: winTex })
+  );
+  const a = (i / 26) * TAU;
+  const dist = 26 + Math.random() * 22;
+  tower.position.set(Math.cos(a) * dist, h / 2 - 6, Math.sin(a) * dist - 10);
+  scene.add(tower);
+}
+
+// --- the roof: court slab, parapet, string lights -------------------------------------
+const roof = new THREE.Mesh(
+  new THREE.BoxGeometry(16, 0.5, 12),
+  new THREE.MeshStandardMaterial({ color: 0x1B2330, roughness: 0.7 })
+);
+roof.position.y = -0.25;
+roof.receiveShadow = true;
+scene.add(roof);
+// court lines, cream
+function line(points, color = CREAM) {
+  return new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints(points),
+    new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.8 })
+  );
+}
+const circ = [];
+for (let i = 0; i <= 48; i++) circ.push(new THREE.Vector3(Math.cos(i / 48 * TAU) * 1.4 + 1, 0.03, Math.sin(i / 48 * TAU) * 1.4 + 1));
+scene.add(line(circ));
+for (const s of [-1, 1]) {
+  const p = new THREE.Mesh(new THREE.BoxGeometry(16, 0.5, 0.18), new THREE.MeshStandardMaterial({ color: CHARCOAL, roughness: 0.8 }));
+  p.position.set(0, 0.4, s * 5.9);
+  scene.add(p);
+}
+// string lights — little warm bulbs on a sagging line across the corner
+const bulbMat = new THREE.MeshBasicMaterial({ color: 0xFFE3B8 });
+for (let i = 0; i <= 14; i++) {
+  const p = i / 14;
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), bulbMat);
+  bulb.position.set(-7.6 + p * 9, 3.1 - Math.sin(p * Math.PI) * 0.7, -5.6 + p * 1.2);
+  scene.add(bulb);
+}
+
+// --- the hoop: pole, BOARD, rim, net ----------------------------------------------------
+const HOOP = new THREE.Vector3(5.2, 2.6, -1);
+const inkMat = new THREE.MeshStandardMaterial({ color: CHARCOAL, roughness: 0.6 });
+const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 3.5, 12), inkMat);
+pole.position.set(HOOP.x + 0.62, 1.75, HOOP.z);
+pole.castShadow = true;
+scene.add(pole);
+const board = new THREE.Mesh(new THREE.BoxGeometry(0.07, 1.05, 1.5),
+  new THREE.MeshStandardMaterial({ color: CREAM, roughness: 0.8 }));
+board.position.set(HOOP.x + 0.56, HOOP.y + 0.42, HOOP.z);
+board.castShadow = true;
+scene.add(board);
+const rim = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.045, 16, 64),
+  new THREE.MeshStandardMaterial({ color: BALL_ORANGE, roughness: 0.45 }));
+rim.rotation.x = Math.PI / 2;
+rim.position.copy(HOOP);
+scene.add(rim);
+const net = makeNet(0.43, { color: CREAM });
+net.position.copy(HOOP);
+scene.add(net);
+
+// --- the ball: dribbles the roof, rises, makes it ------------------------------------------
+const ball = makeBasketball(R, { castShadow: true, seamWidth: 0.06 });
+scene.add(ball);
+const START = new THREE.Vector3(-5.5, R, 2.6);
+const LAUNCH = new THREE.Vector3(2.0, R, 0.2);
+const GLASS = new THREE.Vector3(HOOP.x + 0.5, HOOP.y + 0.42, HOOP.z);
+const ARC = [LAUNCH.clone(), ...bankShotPoints(LAUNCH, HOOP, GLASS, 60, 9)];
+const SEG = { dribble: 0.46, shot: 0.64, drop: 0.72, home: 1.0 };
+
+function ballAt(t, out) {
+  if (t < SEG.dribble) {
+    const p = t / SEG.dribble;
+    out.lerpVectors(START, LAUNCH, p);
+    out.y = dribbleY(p, 4, 1.05, R);
+  } else if (t < SEG.shot) {
+    const p = (t - SEG.dribble) / (SEG.shot - SEG.dribble);
+    const f = p * (ARC.length - 1), i = Math.min(ARC.length - 2, Math.floor(f));
+    out.copy(ARC[i]).lerp(ARC[i + 1], f - i);
+  } else if (t < SEG.drop) {
+    const p = (t - SEG.shot) / (SEG.drop - SEG.shot);
+    out.set(HOOP.x, HOOP.y - (HOOP.y - R) * p * p, HOOP.z);
+  } else {
+    const p = (t - SEG.drop) / (SEG.home - SEG.drop);
+    out.lerpVectors(new THREE.Vector3(HOOP.x, R, HOOP.z), START, p);
+    out.y = dribbleY(p, 3, 1.2 * (1 - p * 0.4), R);
+  }
+}
+
+const clock = new THREE.Clock();
+const frameEl = document.getElementById('frame');
+const pos = new THREE.Vector3(), prev = new THREE.Vector3();
+function resize() {
+  const w = frameEl.clientWidth || innerWidth, h = frameEl.clientHeight || innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  fitFov(camera, 42, 56);
+}
+addEventListener('frame-resize', resize);
+mountViewframe();
+resize();
+
+renderer.setAnimationLoop(() => {
+  const t = (clock.getElapsedTime() % LOOP_SECONDS) / LOOP_SECONDS;
+  prev.copy(pos);
+  ballAt(t, pos);
+  ball.position.copy(pos);
+  ball.rotation.z -= (pos.x - prev.x) / R * 0.8;
+  const squash = 1 - 0.18 * Math.exp(-Math.pow((pos.y - R) / 0.1, 2));
+  ball.scale.set(2 - squash, squash, 2 - squash).multiplyScalar(0.5 + 0.5 * squash);
+  const nearRim = Math.exp(-Math.pow(pos.distanceTo(HOOP) / 0.5, 2));
+  rim.scale.setScalar(1 + nearRim * 0.1);
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

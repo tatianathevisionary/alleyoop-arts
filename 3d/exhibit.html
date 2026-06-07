@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALLEYOOP ARTS — The Motion Gallery</title>
+<meta name="description" content="Canada's first digital basketball motion-art gallery. Limited prints, living art, one ball.">
+<style>
+  /* Brand wrapper only: Ink Black · Court Cream · Alleyoop Orange. Cream leads. */
+  :root { --ink: #0E0E0E; --cream: #F2E9C7; --orange: #EE9933; }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--cream); color: var(--ink);
+    font: 400 17px/1.55 ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 28px; }
+
+  /* hero — the gallery space, live */
+  .hero { position: relative; height: 92vh; min-height: 540px; background: var(--ink); }
+  .hero iframe { width: 100%; height: 100%; border: 0; display: block; opacity: .92; }
+  .hero .title {
+    position: absolute; inset: auto 0 64px 0; text-align: center; pointer-events: none;
+  }
+  .hero h1 {
+    color: var(--cream); font-size: clamp(34px, 6vw, 84px); font-weight: 800;
+    letter-spacing: .18em; text-shadow: 0 2px 30px rgba(14,14,14,.55);
+  }
+  .hero h1 .oo { border-bottom: 5px solid var(--orange); }
+  .hero .line {
+    color: var(--cream); letter-spacing: .22em; font-size: clamp(11px, 1.6vw, 15px);
+    margin-top: 14px; opacity: .9;
+  }
+
+  section { padding: 84px 0; }
+  .kicker { letter-spacing: .3em; font-size: 12px; opacity: .55; margin-bottom: 14px; }
+  h2 { font-size: clamp(24px, 3.4vw, 40px); letter-spacing: .1em; font-weight: 800; margin-bottom: 22px; }
+  p.lead { font-size: clamp(17px, 2vw, 21px); max-width: 760px; }
+  p + p { margin-top: 1em; }
+
+  /* the motion grid */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 26px; margin-top: 36px; }
+  .piece { border: 2px solid var(--ink); background: var(--ink); }
+  .piece iframe { width: 100%; aspect-ratio: 4/3; border: 0; display: block; }
+  .piece .label {
+    display: flex; justify-content: space-between; background: var(--cream);
+    padding: 12px 14px; border-top: 2px solid var(--ink);
+    font-size: 13px; letter-spacing: .12em; font-weight: 700;
+  }
+  .piece .label span:last-child { color: var(--orange); }
+
+  /* wall text */
+  .wall { background: var(--ink); color: var(--cream); }
+  .wall blockquote {
+    font-size: clamp(20px, 3vw, 34px); line-height: 1.5; max-width: 880px;
+    letter-spacing: .04em;
+  }
+  .wall .orange { color: var(--orange); }
+
+  /* the print collection strip */
+  .strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; margin-top: 34px; }
+  .strip img { width: 100%; aspect-ratio: 1; object-fit: cover; border: 2px solid var(--ink); display: block; }
+
+  /* shop block */
+  .shop { text-align: center; }
+  .cta {
+    display: inline-block; margin-top: 26px; padding: 16px 38px;
+    background: var(--ink); color: var(--cream); text-decoration: none;
+    font-weight: 700; letter-spacing: .2em; font-size: 15px;
+    border: 2px solid var(--ink);
+  }
+  .cta:hover { background: var(--orange); border-color: var(--orange); color: var(--ink); }
+  .cta-sub { display: block; margin-top: 14px; font-size: 12px; letter-spacing: .18em; opacity: .55; }
+
+  footer {
+    border-top: 2px solid var(--ink); padding: 34px 0; text-align: center;
+    font-size: 12px; letter-spacing: .22em; opacity: .65;
+  }
+  .draftbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    background: var(--orange); color: var(--ink); text-align: center;
+    font: 700 11px/1 ui-monospace, monospace; letter-spacing: .2em; padding: 7px;
+  }
+</style>
+</head>
+<body>
+<div class="draftbar">INTERNAL PREVIEW — NOT PUBLISHED · COPY PENDING REVIEW</div>
+
+<!-- HERO: the gallery, live -->
+<div class="hero">
+  <iframe src="gallery-space.html" title="The Gallery — live"></iframe>
+  <div class="title">
+    <h1>THE M<span class="oo">OO</span>TION GALLERY</h1>
+    <div class="line">THE GALLERY FOR THE GAME — NOW IN MOTION</div>
+  </div>
+</div>
+
+<!-- THE IDEA -->
+<section>
+  <div class="wrap">
+    <div class="kicker">THE EXHIBIT</div>
+    <h2>Basketball, hung like it matters.</h2>
+    <p class="lead">Music got its album covers. Film got its one-sheets. Basketball got highlight clips that
+    disappear in a day. We think the game deserves walls.</p>
+    <p class="lead">The Motion Gallery is Canada's first digital basketball motion-art gallery: living
+    artworks built in 3D — every ball a real basketball, every shot a real arc, every loop seamless.
+    Watch them here. Hang the stills at home. The prints are numbered, signed, and gone when they're gone.</p>
+  </div>
+</section>
+
+<!-- THE MOTION PIECES -->
+<section style="padding-top: 0">
+  <div class="wrap">
+    <div class="kicker">ON DISPLAY</div>
+    <h2>The motion works.</h2>
+    <div class="grid">
+      <div class="piece"><iframe src="galaxy.html" loading="lazy" title="Basketball Galaxy"></iframe>
+        <div class="label"><span>BASKETBALL GALAXY</span><span>12s · loop</span></div></div>
+      <div class="piece"><iframe src="neon-court.html" loading="lazy" title="Neon Court"></iframe>
+        <div class="label"><span>NEON COURT</span><span>10s · loop</span></div></div>
+      <div class="piece"><iframe src="maze-run.html" loading="lazy" title="Maze Run"></iframe>
+        <div class="label"><span>MAZE RUN</span><span>12s · loop</span></div></div>
+      <div class="piece"><iframe src="jungle-gym.html" loading="lazy" title="Basketball Jungle Gym"></iframe>
+        <div class="label"><span>BASKETBALL JUNGLE GYM</span><span>10s · loop</span></div></div>
+      <div class="piece"><iframe src="lob-loop.html" loading="lazy" title="The Shot"></iframe>
+        <div class="label"><span>THE SHOT</span><span>6s · loop</span></div></div>
+      <div class="piece"><iframe src="vortex.html" loading="lazy" title="The Spin Move"></iframe>
+        <div class="label"><span>THE SPIN MOVE</span><span>8s · loop</span></div></div>
+      <div class="piece"><iframe src="skyline-bounce.html" loading="lazy" title="Skyline Bounce"></iframe>
+        <div class="label"><span>SKYLINE BOUNCE</span><span>6s · loop</span></div></div>
+      <div class="piece"><iframe src="rim-tunnel.html" loading="lazy" title="The Walkout"></iframe>
+        <div class="label"><span>THE WALKOUT</span><span>3s · loop</span></div></div>
+      <div class="piece"><iframe src="jumbotron.html" loading="lazy" title="Jumbotron"></iframe>
+        <div class="label"><span>JUMBOTRON</span><span>8s · loop</span></div></div>
+      <div class="piece"><iframe src="rooftop-court.html" loading="lazy" title="Rooftop Court"></iframe>
+        <div class="label"><span>ROOFTOP COURT</span><span>8s · loop</span></div></div>
+      <div class="piece"><iframe src="seam-orbit.html" loading="lazy" title="Seam Orbit"></iframe>
+        <div class="label"><span>SEAM ORBIT</span><span>8s · loop</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- WALL TEXT -->
+<section class="wall">
+  <div class="wrap">
+    <div class="kicker" style="color:#F2E9C7">WALL TEXT</div>
+    <blockquote>
+      An alley-oop is the one play you cannot run alone. Someone reads the floor.
+      Someone trusts the lob. Someone finishes. Everything in this room is that pass —
+      thrown to the athletes the highlight reels missed, the artists the galleries
+      haven't found yet, and the kid still out there when the streetlights come on.
+      <span class="orange">The pass is the play.</span>
+    </blockquote>
+  </div>
+</section>
+
+<!-- THE PRINTS -->
+<section>
+  <div class="wrap">
+    <div class="kicker">THE PRINTS</div>
+    <h2>From the wall of the gallery to the wall of your place.</h2>
+    <p class="lead">The originals behind the motion: a 30-work curated collection, plus THE JUNGLE GYM —
+    20 new works, one day on the playground, dawn to streetlights.</p>
+    <div class="strip">
+      <img src="../art/01-alley-runner.png" alt="Alley Runner">
+      <img src="../art/02-hoop.png" alt="Hoop">
+      <img src="../art/04-burst.png" alt="Burst">
+      <img src="../art/08-perfect-pass.png" alt="Perfect Pass">
+      <img src="../art/09-high-jump.png" alt="High Jump">
+      <img src="../art/13-creative.png" alt="Creative">
+      <img src="../art/15-slam.png" alt="Slam">
+      <img src="../art/17-sentinel.png" alt="Sentinel">
+      <img src="../art/18-rise.png" alt="Rise">
+      <img src="../art/20-underdog.png" alt="Underdog">
+    </div>
+  </div>
+</section>
+
+<!-- SHOP -->
+<section class="shop wall">
+  <div class="wrap">
+    <h2 style="letter-spacing:.16em">GET POSTERIZED.</h2>
+    <p class="lead" style="margin:0 auto">Drop 01 · editions of 50 · numbered and signed.</p>
+    <a class="cta" href="#" onclick="return false">ENTER THE SHOP</a>
+    <span class="cta-sub">LIMITED POSSESSIONS.</span>
+  </div>
+</section>
+
+<footer>
+  ALLEYOOP ARTS · EST. 2026 · CANADA · THE PASS IS THE PLAY.
+</footer>
+</body>
+</html>

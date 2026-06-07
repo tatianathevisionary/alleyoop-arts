@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALLEYOOP — The Descent (infinite stoop)</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0E0E0E; overflow: hidden; color: #F2E9C7; }
+  .tag { position: fixed; left: 24px; bottom: 20px; font: 500 13px/1.4 ui-monospace, Menlo, monospace;
+         color: #F2E9C7; letter-spacing: .12em; user-select: none; }
+  .tag b { letter-spacing: .18em; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="frame"><canvas id="scene"></canvas></div>
+<div class="tag"><b>ALLEYOOP</b> · the descent · 4s loop · down the stoop, forever</div>
+<script type="module">
+import * as THREE from 'three';
+import { mountViewframe, fitFov } from './viewframe.js';
+import { makeBasketball } from './basketball.js';
+
+// Autumn Court palette (style guide): ochre, olive, deep green-gray
+const OCHRE = 0xE09432, OLIVE = 0x64714D, DEEPGG = 0x333D38, CREAM = 0xF2E9C7;
+const LOOP_SECONDS = 4, TAU = Math.PI * 2;
+const R = 0.34;
+const STEP_H = 0.42, STEP_D = 0.95, N_STEPS = 16, BOUNCES = 4;
+
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene'), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(OLIVE);
+scene.fog = new THREE.Fog(OLIVE, 14, 32);
+
+const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 60);
+camera.position.set(5.6, 2.2, 7.5);
+camera.lookAt(0, 0.8, 0);
+
+const sun = new THREE.DirectionalLight(0xFFE3B0, 2.6);
+sun.position.set(-6, 9, 5);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = sun.shadow.camera.bottom = -12;
+sun.shadow.camera.right = sun.shadow.camera.top = 12;
+sun.shadow.radius = 5;
+scene.add(sun, new THREE.HemisphereLight(0x88BBCC, OCHRE, 0.8));
+
+// the endless stoop: steps treadmill upward while the ball bounces in place —
+// the eye reads an infinite descent
+const stepMat = new THREE.MeshStandardMaterial({ color: OCHRE, roughness: 0.9 });
+const sideMat = new THREE.MeshStandardMaterial({ color: DEEPGG, roughness: 0.9 });
+const steps = [];
+for (let i = 0; i < N_STEPS; i++) {
+  const g = new THREE.Group();
+  const tread = new THREE.Mesh(new THREE.BoxGeometry(3.2, STEP_H, STEP_D), stepMat);
+  tread.castShadow = tread.receiveShadow = true;
+  g.add(tread);
+  const wall = new THREE.Mesh(new THREE.BoxGeometry(0.3, STEP_H + 1.6, STEP_D), sideMat);
+  wall.position.set(-1.75, 0.8, 0);
+  wall.castShadow = true;
+  g.add(wall);
+  scene.add(g);
+  steps.push(g);
+}
+
+const ball = makeBasketball(R, { castShadow: true, seamWidth: 0.06 });
+scene.add(ball);
+
+const clock = new THREE.Clock();
+const frameEl = document.getElementById('frame');
+function resize() {
+  const w = frameEl.clientWidth || innerWidth, h = frameEl.clientHeight || innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  fitFov(camera, 40, 50);
+}
+addEventListener('frame-resize', resize);
+mountViewframe();
+resize();
+
+renderer.setAnimationLoop(() => {
+  const t = (clock.getElapsedTime() % LOOP_SECONDS) / LOOP_SECONDS;
+
+  // world slides up-and-back by BOUNCES steps per loop; pattern is uniform → seamless
+  const shift = t * BOUNCES;
+  steps.forEach((g, i) => {
+    const u = ((i - shift) % N_STEPS + N_STEPS) % N_STEPS;   // 0 = highest
+    g.position.set(0, (N_STEPS / 2 - u) * STEP_H - 2.5, (u - N_STEPS / 2) * STEP_D);
+  });
+
+  // the ball bounces in place at constant height — the scrolling steps sell the
+  // descent. One step passes per bounce, so every contact lands on a fresh tread.
+  const ph = (t * BOUNCES) % 1;
+  const hop = Math.pow(Math.abs(Math.sin(Math.PI * ph)), 0.85);
+  ball.position.set(0.4, 0.95 + STEP_H / 2 + R + hop * 1.25, 0.2);
+  ball.rotation.x -= 0.04;
+  const squash = 1 - 0.18 * Math.exp(-Math.pow(hop / 0.07, 2));
+  ball.scale.set(2 - squash, squash, 2 - squash).multiplyScalar(0.5 + 0.5 * squash);
+
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

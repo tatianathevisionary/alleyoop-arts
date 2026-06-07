@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALLEYOOP — Basketball Jungle Gym (loop prototype)</title>
+<style>
+  /* Collection layer: Alleyoop Core palette — maze teal, sky blue, court green,
+     warm cream. Ball + rim: sunset orange. The playground as the first arena. */
+  html, body { margin: 0; height: 100%; background: #0E0E0E; overflow: hidden; color: #F2E9C7; }
+  .tag {
+    position: fixed; left: 24px; bottom: 20px;
+    font: 500 13px/1.4 ui-monospace, "SF Mono", Menlo, monospace;
+    color: #F2E9C7; letter-spacing: .12em; user-select: none;
+  }
+  .tag b { letter-spacing: .18em; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="frame"><canvas id="scene"></canvas></div>
+<div class="tag"><b>ALLEYOOP</b> · basketball jungle gym · 10s loop · core palette</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { mountViewframe, fitFov } from './viewframe.js';
+import { makeBasketball, makeNet, bankShotPoints, BALL_ORANGE } from './basketball.js';
+
+// Alleyoop Core (ALLEYOOP_ARTS_STYLE_GUIDE.md)
+const TEAL  = 0x2B5D4B, SKY = 0x88BBCC, GREEN = 0x40815D, CREAM = 0xF2E9C7, CHARCOAL = 0x223333;
+const LOOP_SECONDS = 10;
+const TAU = Math.PI * 2;
+
+// --- renderer / scene / camera ---------------------------------------------------
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene'), antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(SKY);
+scene.fog = new THREE.Fog(SKY, 22, 48);
+
+const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 80);
+
+// hard playground sun, long shadows
+const sun = new THREE.DirectionalLight(0xFFF4DC, 2.9);
+sun.position.set(-8, 12, 6);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = sun.shadow.camera.bottom = -14;
+sun.shadow.camera.right = sun.shadow.camera.top = 14;
+sun.shadow.radius = 6;
+scene.add(sun);
+scene.add(new THREE.HemisphereLight(SKY, CREAM, 1.0));
+
+// court-green rubber ground
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(80, 80),
+  new THREE.MeshStandardMaterial({ color: GREEN, roughness: 0.95 })
+);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// --- the jungle gym -----------------------------------------------------------------
+const barMat   = new THREE.MeshStandardMaterial({ color: TEAL, roughness: 0.6, metalness: 0.15 });
+const jointMat = new THREE.MeshStandardMaterial({ color: CREAM, roughness: 0.7 });
+const BAR_R = 0.06;
+
+function bar(a, b, mat = barMat) {
+  const dir = new THREE.Vector3().subVectors(b, a);
+  const len = dir.length();
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(BAR_R, BAR_R, len, 12), mat);
+  m.position.copy(a).addScaledVector(dir, 0.5);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
+  m.castShadow = true;
+  scene.add(m);
+  return m;
+}
+function joint(p, r = 0.09) {
+  const m = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 16), jointMat);
+  m.position.copy(p);
+  m.castShadow = true;
+  scene.add(m);
+}
+
+// 1 · the dome climber — latitude rings + longitude arcs
+const DOME_R = 2.6, DOME_C = new THREE.Vector3(-3.2, 0, -1.5);
+for (const f of [0.35, 0.7]) {                       // latitude rings
+  const y = DOME_R * f;
+  const r = Math.sqrt(DOME_R * DOME_R - y * y);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(r, BAR_R, 10, 64), barMat);
+  ring.rotation.x = Math.PI / 2;
+  ring.position.set(DOME_C.x, y, DOME_C.z);
+  ring.castShadow = true;
+  scene.add(ring);
+}
+for (let i = 0; i < 6; i++) {                        // longitude arcs
+  const arc = new THREE.Mesh(new THREE.TorusGeometry(DOME_R, BAR_R, 10, 48, Math.PI), barMat);
+  arc.position.set(DOME_C.x, 0, DOME_C.z);
+  arc.rotation.z = 0;
+  arc.rotation.y = (i / 6) * Math.PI;
+  arc.castShadow = true;
+  scene.add(arc);
+}
+joint(new THREE.Vector3(DOME_C.x, DOME_R, DOME_C.z), 0.12);   // crown
+
+// 2 · monkey bars — two rails, rungs, four posts
+const MB_Y = 2.0, MB_Z = 1.8, MB_X0 = -0.6, MB_X1 = 3.4, MB_W = 0.7;
+for (const dz of [-MB_W / 2, MB_W / 2]) {
+  bar(new THREE.Vector3(MB_X0, MB_Y, MB_Z + dz), new THREE.Vector3(MB_X1, MB_Y, MB_Z + dz));
+  bar(new THREE.Vector3(MB_X0, 0, MB_Z + dz), new THREE.Vector3(MB_X0, MB_Y, MB_Z + dz));
+  bar(new THREE.Vector3(MB_X1, 0, MB_Z + dz), new THREE.Vector3(MB_X1, MB_Y, MB_Z + dz));
+}
+for (let i = 0; i <= 8; i++) {
+  const x = MB_X0 + (MB_X1 - MB_X0) * (i / 8);
+  bar(new THREE.Vector3(x, MB_Y, MB_Z - MB_W / 2), new THREE.Vector3(x, MB_Y, MB_Z + MB_W / 2), jointMat);
+}
+
+// 3 · the hoop — mounted on the gym, orange ring, cream board
+const HOOP = new THREE.Vector3(5.6, 2.6, -0.6);
+bar(new THREE.Vector3(HOOP.x + 0.55, 0, HOOP.z), new THREE.Vector3(HOOP.x + 0.55, 3.4, HOOP.z));
+const board = new THREE.Mesh(
+  new THREE.BoxGeometry(0.1, 1.1, 1.5),
+  new THREE.MeshStandardMaterial({ color: CREAM, roughness: 0.85 })
+);
+board.position.set(HOOP.x + 0.5, 3.0, HOOP.z);
+board.castShadow = true;
+scene.add(board);
+const square = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.45, 0.6), new THREE.MeshStandardMaterial({ color: CHARCOAL }));
+square.position.set(HOOP.x + 0.44, 2.85, HOOP.z);
+scene.add(square);
+const rim = new THREE.Mesh(
+  new THREE.TorusGeometry(0.45, 0.045, 16, 64),
+  new THREE.MeshStandardMaterial({ color: BALL_ORANGE, roughness: 0.45 })
+);
+rim.rotation.x = Math.PI / 2;
+rim.position.copy(HOOP);
+rim.castShadow = true;
+scene.add(rim);
+const net = makeNet(0.43, { color: CREAM });
+net.position.copy(HOOP);
+scene.add(net);
+
+// --- the ball: bounces through the playground, over the bars, through the hoop --------
+const BALL_R = 0.36;
+const ball = makeBasketball(BALL_R, { castShadow: true, seamWidth: 0.06 });
+scene.add(ball);
+
+// closed path: ground bounce → over the dome crown → along the monkey bars →
+// then a REAL shot (true projectile arc into the rim) → out underneath → home.
+const LAUNCH = new THREE.Vector3(3.4, 2.7, 1.6);   // release point off the last rung
+const path = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-6.5, 0.6,  2.2),
+  new THREE.Vector3(-4.8, 2.2,  0.2),
+  new THREE.Vector3(-3.2, 3.4, -1.5),    // over the dome crown
+  new THREE.Vector3(-1.6, 1.2,  0.6),
+  new THREE.Vector3(-0.6, 2.55, 1.8),    // onto the monkey bars
+  new THREE.Vector3( 1.4, 2.45, 1.8),    // rolling the rails
+  LAUNCH,
+  ...bankShotPoints(LAUNCH, HOOP, new THREE.Vector3(HOOP.x + 0.42, HOOP.y + 0.4, HOOP.z), 58, 6), // over the net, off the glass, in
+  new THREE.Vector3( 5.4, 0.9, -0.7),    // out the bottom
+  new THREE.Vector3( 2.5, 0.5,  3.0),    // ground run home
+  new THREE.Vector3(-2.0, 1.6,  3.6),
+], true, 'centripetal');
+
+// --- animate ---------------------------------------------------------------------------
+const clock = new THREE.Clock();
+const frameEl = document.getElementById('frame');
+const ballPos = new THREE.Vector3();
+
+function resize() {
+  const w = frameEl.clientWidth || innerWidth, h = frameEl.clientHeight || innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  fitFov(camera, 42, 54);   // 9:16 keeps dome → monkey bars → hoop in frame
+}
+addEventListener('frame-resize', resize);
+mountViewframe();
+resize();
+
+renderer.setAnimationLoop(() => {
+  const t = (clock.getElapsedTime() % LOOP_SECONDS) / LOOP_SECONDS;
+
+  path.getPointAt(t, ballPos);
+  ball.position.copy(ballPos);
+  ball.rotation.x += 0.045;
+  ball.rotation.y += 0.018;
+
+  // rim pulse at the pass-through — distance-based, robust to path edits
+  const nearRim = Math.exp(-Math.pow(ballPos.distanceTo(HOOP) / 0.55, 2));
+  rim.scale.setScalar(1 + nearRim * 0.1);
+
+  // camera: slow half-arc drift, sine-eased so it returns at the seam
+  const sway = Math.sin(t * TAU);
+  camera.position.set(1.2 + sway * 1.6, 3.0 + Math.sin(t * TAU * 2) * 0.15, 11.5);
+  camera.lookAt(0.4, 1.8, 0);
+
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>
