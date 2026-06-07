@@ -78,11 +78,11 @@ function Gallery() {
           <span className="mono-label" style={{ marginLeft: 2 }}>The Collection</span>
         </div>
         <nav>
-          <a href="#grid">Works</a>
+          <a href="gallery.html">The Collection</a>
           <a href="shop.html">Shop</a>
+          <a href="3d/gallery-space.html">The Gallery — Live</a>
           <a href="about.html">About</a>
           <a href="contact.html">Contact</a>
-          <a href="3d/gallery-space.html">The Gallery — Live</a>
         </nav>
         <div className="modeswitch" role="group" aria-label="Mode">
           <button data-on={mode === "cream" ? "1" : "0"} onClick={() => setMode("cream")}>Cream</button>
