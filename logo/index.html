@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Alleyoop Arts — Logo Preview</title>
+<link rel="icon" href="favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root { --ink:#0E0E0E; --cream:#F2E9C7; --orange:#EE9933; }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:'Hanken Grotesk',system-ui,sans-serif; background:var(--cream); color:var(--ink); }
+  header { padding:42px 5vw 26px; border-bottom:2px solid var(--ink); display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:10px; }
+  header h1 { font-weight:800; letter-spacing:-.02em; font-size:clamp(22px,3.4vw,34px); }
+  header a { font-size:13px; font-weight:600; color:var(--ink); }
+  .label { font-size:11px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; opacity:.55; margin-bottom:16px; }
+  .row { display:grid; grid-template-columns:1fr 1fr; }
+  @media (max-width:760px){ .row { grid-template-columns:1fr; } }
+  .cell { padding:clamp(28px,4vw,52px) 5vw; display:flex; flex-direction:column; gap:30px; border-bottom:1px solid rgba(14,14,14,.15); }
+  .cell.dark { background:var(--ink); color:var(--cream); border-bottom:1px solid rgba(242,233,199,.15); }
+  .cell.dark .label { opacity:.5; }
+  .item { display:flex; flex-direction:column; gap:10px; }
+  .item img { max-width:min(440px,100%); height:auto; }
+  .item .name { font-size:12.5px; font-weight:600; opacity:.65; }
+  .item .name code { font-size:11.5px; }
+  .small img { max-width:150px; }
+  .tiny img { max-width:84px; }
+  footer { padding:34px 5vw 60px; font-size:12px; letter-spacing:.14em; text-transform:uppercase; opacity:.6; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Logo Preview — all marks, both grounds</h1>
+  <a href="../index.html">← back to site</a>
+</header>
+
+<div class="row">
+  <div class="cell">
+    <div class="label">Wordmark · on cream</div>
+    <div class="item"><img src="wordmark-ink.svg" alt=""><span class="name"><code>wordmark-ink.svg</code> — plain rims</span></div>
+    <div class="item"><img src="wordmark-ink-arc.svg" alt=""><span class="name"><code>wordmark-ink-arc.svg</code> — the lob arc</span></div>
+    <div class="item"><img src="wordmark-ink-twopart.svg" alt=""><span class="name"><code>wordmark-ink-twopart.svg</code> — orange finish rim</span></div>
+  </div>
+  <div class="cell dark">
+    <div class="label">Wordmark · on ink</div>
+    <div class="item"><img src="wordmark-cream.svg" alt=""><span class="name"><code>wordmark-cream.svg</code></span></div>
+    <div class="item"><img src="wordmark-cream-arc.svg" alt=""><span class="name"><code>wordmark-cream-arc.svg</code></span></div>
+    <div class="item"><img src="wordmark-cream-twopart.svg" alt=""><span class="name"><code>wordmark-cream-twopart.svg</code></span></div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="cell">
+    <div class="label">Monogram · on cream</div>
+    <div class="item small"><img src="monogram-ink.svg" alt=""><span class="name"><code>monogram-ink.svg</code></span></div>
+    <div class="item small"><img src="monogram-accent-ink.svg" alt=""><span class="name"><code>monogram-accent-ink.svg</code> — orange finish</span></div>
+  </div>
+  <div class="cell dark">
+    <div class="label">Monogram · on ink</div>
+    <div class="item small"><img src="monogram-cream.svg" alt=""><span class="name"><code>monogram-cream.svg</code></span></div>
+    <div class="item small"><img src="monogram-tonal-ink.svg" alt=""><span class="name"><code>monogram-tonal-ink.svg</code> — tone-on-tone</span></div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="cell">
+    <div class="label">Ball &amp; favicon · on cream</div>
+    <div style="display:flex; gap:38px; align-items:flex-end; flex-wrap:wrap">
+      <div class="item tiny"><img src="ball-solid.svg" alt=""><span class="name"><code>ball-solid.svg</code></span></div>
+      <div class="item tiny"><img src="ball-line-ink.svg" alt=""><span class="name"><code>ball-line-ink.svg</code></span></div>
+      <div class="item tiny"><img src="favicon.svg" alt=""><span class="name"><code>favicon.svg</code></span></div>
+    </div>
+  </div>
+  <div class="cell dark">
+    <div class="label">Live engine (react) — variants not yet exported</div>
+    <p style="font-size:14px; line-height:1.65; opacity:.8; max-width:46ch">
+      The parametric source <code>logo.jsx</code> also renders: nets hanging in the O's,
+      a basketball replacing either O, overlapping O's, and the full lockup with the
+      "arts" script + EST. 2026 rules. See the <a href="../brand.html" style="color:var(--orange)">brand page</a>
+      for those in motion — say the word and any of them becomes an SVG file here.
+    </p>
+  </div>
+</div>
+
+<footer>The pass is the play · geometry locked: rim .78em · stroke .118em · tracking −.045em</footer>
+
+</body>
+</html>
