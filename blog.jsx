@@ -216,7 +216,7 @@ function Blog() {
       </div>
       <nav>
         <a href="index.html">Home</a>
-        <a href="gallery.html">Gallery</a>
+        <a href="3d/gallery-space.html">Gallery</a>
         <a href="shop.html">Shop</a>
         <a href="blog.html">Blog</a>
         <a href="about.html">About</a>
@@ -249,6 +249,11 @@ function Blog() {
             <div className="eyebrow" style={{ marginTop: 26 }}><span className="num">·</span> {post.section} · {post.date}</div>
             <h1 style={{ fontWeight: 800, letterSpacing: "-.03em", lineHeight: 1.0, fontSize: "clamp(34px,5.5vw,64px)", margin: "16px 0 0", textWrap: "balance" }}>{post.title}</h1>
             <p className="lead" style={{ marginTop: 22 }}>{post.dek}</p>
+            {post.img && (
+              <div className="imground" style={{ aspectRatio: "16/10", marginTop: 30 }}>
+                <img src={post.img} alt={post.title} />
+              </div>
+            )}
             <div className="post-body" style={{ marginTop: 34 }} dangerouslySetInnerHTML={{ __html: mdToHtml(post.md) }} />
             <div style={{ marginTop: 48, paddingTop: 24, borderTop: "1px solid var(--hair)", fontFamily: "var(--script)", fontSize: 30, color: "var(--orange)" }}>The pass is the play.</div>
           </div>
@@ -277,7 +282,10 @@ function Blog() {
         <div className="bloglist">
           {POSTS.map((p, i) => (
             <a key={p.slug} href={"blog.html#" + p.slug} className="blogrow">
-              <div className="blognum">{String(i + 1).padStart(2, "0")}</div>
+              <div className="blogthumb imground">
+                <img src={p.img} alt={p.title} loading="lazy" />
+                <span className="blognum">{String(i + 1).padStart(2, "0")}</span>
+              </div>
               <div className="blogmain">
                 <div className="eyebrow" style={{ marginBottom: 8 }}>{p.section} · {p.date}</div>
                 <h2 style={{ fontWeight: 800, letterSpacing: "-.02em", fontSize: "clamp(22px,3vw,34px)", margin: 0 }}>{p.title}</h2>

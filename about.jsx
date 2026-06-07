@@ -59,7 +59,7 @@ function About() {
         </div>
         <nav>
           <a href="index.html">Home</a>
-          <a href="gallery.html">Gallery</a>
+          <a href="3d/gallery-space.html">Gallery</a>
           <a href="shop.html">Shop</a>
           <a href="blog.html">Blog</a>
           <a href="about.html">About</a>

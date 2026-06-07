@@ -3,18 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ALLEYOOP — The Gallery (exhibit space)</title>
+<title>ALLEYOOP — The Gallery</title>
+<link rel="icon" href="../logo/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
   /* The gallery for the game — literally. Cream walls, the real 30-work
      collection on them, basketballs on pedestals, a live rim at the far end.
      NOTE: needs the local server (textures load from ../art/). */
-  html, body { margin: 0; height: 100%; background: #0E0E0E; overflow: hidden; color: #F2E9C7; }
+  html, body { margin: 0; height: 100%; background: #0E0E0E; overflow: hidden; color: #F2E9C7;
+    font-family: 'Hanken Grotesk', system-ui, sans-serif; }
   .tag {
     position: fixed; left: 24px; bottom: 20px;
     font: 500 13px/1.4 ui-monospace, "SF Mono", Menlo, monospace;
-    color: #F2E9C7; letter-spacing: .12em; user-select: none;
+    color: #0E0E0E; letter-spacing: .12em; user-select: none; opacity: .7;
   }
   .tag b { letter-spacing: .18em; }
+  /* site header overlay — so the gallery is part of the site, not a dead end */
+  .ovl {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px clamp(18px, 4vw, 44px);
+    background: linear-gradient(180deg, rgba(239,229,192,.92), rgba(239,229,192,0));
+  }
+  .ovl a { text-decoration: none; }
+  .ovl .wm { height: 22px; display: block; }
+  .ovl nav { display: flex; gap: 22px; align-items: center; }
+  .ovl nav a { font-size: 12.5px; font-weight: 600; letter-spacing: .04em; color: rgba(14,14,14,.62); }
+  .ovl nav a:hover { color: #0E0E0E; }
+  .ovl nav a.on { color: #0E0E0E; }
+  .ovl nav a.list { display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid rgba(14,14,14,.25); border-radius: 999px; padding: 7px 13px; color: #0E0E0E; }
+  @media (max-width: 760px){ .ovl nav a:not(.list){ display: none; } }
 </style>
 <script type="importmap">
 { "imports": {
@@ -24,6 +45,18 @@
 </script>
 </head>
 <body>
+<header class="ovl">
+  <a href="../index.html" aria-label="Alleyoop Arts — home"><img class="wm" src="../logo/wordmark-ink-arc.svg" alt="ALLEYOOP" /></a>
+  <nav>
+    <a href="../index.html">Home</a>
+    <a href="gallery-space.html" class="on">Gallery</a>
+    <a href="../shop.html">Shop</a>
+    <a href="../blog.html">Blog</a>
+    <a href="../about.html">About</a>
+    <a href="../contact.html">Contact</a>
+    <a href="../gallery.html" class="list" title="See every work as a grid">▦ List view</a>
+  </nav>
+</header>
 <div id="frame"><canvas id="scene"></canvas></div>
 <div class="tag"><b>ALLEYOOP</b> · the gallery · 20s loop · the gallery for the game</div>
 
