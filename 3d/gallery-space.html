@@ -36,6 +36,8 @@
   .ovl nav a.list { display: inline-flex; align-items: center; gap: 6px;
     border: 1px solid rgba(14,14,14,.25); border-radius: 999px; padding: 7px 13px; color: #0E0E0E; }
   @media (max-width: 760px){ .ovl nav a:not(.list){ display: none; } }
+  /* hide the aspect-ratio capture bar on the public gallery — it's a recording tool */
+  .viewbar { display: none !important; }
 </style>
 <script type="importmap">
 { "imports": {
