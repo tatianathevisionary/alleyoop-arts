@@ -35,6 +35,24 @@ python3 -m http.server 4488
 | `3d/BRAND-INTRO.md` | The 12s brand ident: storyboard, audio cues, 20s/12s/5s/2s cutdowns |
 | `3d/record-renders.js` · `3d/record-hundred.js` | Headless recording pipeline (Playwright + ffmpeg) |
 
+## The Shop (store design)
+
+The storefront for the prints. *Get posterized. Limited possessions.*
+
+```bash
+python3 -m http.server 4488
+# then open:
+#   http://localhost:4488/shop.html   ← The Shop — storefront design
+```
+
+| Path | What it holds |
+|------|---------------|
+| `shop.html` + `shop.jsx` | **The Shop storefront design** — filterable print grid (The Collection / Street / Portraits / The Court / Celebration), edition copy, cart, on-brand chrome |
+| `products/` | **The store catalog** — 30 launch prints, Shopify-ready |
+| `products/aa-001…aa-030.png` | Titled print images, numbered for the drop |
+| `products/products.csv` | Shopify product import (titles, descriptions, editions) |
+| `campaign/LAUNCH-CAMPAIGN-DRAFT.md` | Store launch copy — product template, hero lines, CTAs |
+
 ## Repository map
 
 | Path | What it holds |
@@ -44,9 +62,7 @@ python3 -m http.server 4488
 | `brand/IDENTITY.md` · `brand/VOICE.md` | Final v1 brand copy + how everything sounds |
 | `brand/BRAND.md` | Values, palette, logotype, content pillars |
 | `brand/BUSINESS-PLAN.md` · `brand/EXEC-SUMMARY.md` · `brand/SPONSORSHIP-DECK.md` | The plan |
-| `index.html` · `about.html` · `gallery.html` · `shop.html` | The public site (root) |
-| `shop.html` + `shop.jsx` | The Shop storefront design — filterable print grid (The Collection / Street / Portraits / The Court / Celebration), edition copy, cart |
-| `products/` + `products/products.csv` | 30 launch prints, Shopify-ready: titled PNGs (`aa-001`…`aa-030`) + import CSV |
+| `index.html` · `about.html` · `gallery.html` · `shop.html` | The public site (root) — see **The Shop** section above for the store |
 | `studio/` | Internal review tools — brand guidelines, launch plan, content studio |
 | `blog/` | Alleyoop magazine launch posts (drafts — quote-verified, see post 05) |
 | `campaign/` | Launch campaign draft — TV scripts, captions, ad copy, store copy |
