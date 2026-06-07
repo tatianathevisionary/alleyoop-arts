@@ -10,6 +10,24 @@ Founded by [Damion Rashford](brand/FOUNDING-STORY.md).
 
 ---
 
+## The Shop (store design)
+
+The storefront for the prints. *Get posterized. Limited possessions.*
+
+```bash
+python3 -m http.server 4488
+# then open:
+#   http://localhost:4488/shop.html   ← The Shop — storefront design
+```
+
+| Path | What it holds |
+|------|---------------|
+| `shop.html` + `shop.jsx` | **The Shop storefront design** — filterable print grid (The Collection / Street / Portraits / The Court / Celebration), edition copy, cart, on-brand chrome |
+| `products/` | **The store catalog** — 30 launch prints, Shopify-ready |
+| `products/aa-001…aa-030.png` | Titled print images, numbered for the drop |
+| `products/products.csv` | Shopify product import (titles, descriptions, editions) |
+| `campaign/LAUNCH-CAMPAIGN-DRAFT.md` | Store launch copy — product template, hero lines, CTAs |
+
 ## The Motion Gallery
 
 120 living 3D artworks. Every ball is a basketball — real seam geometry, pebbled
@@ -34,24 +52,6 @@ python3 -m http.server 4488
 | `3d/renders/` | Rendered videos of every piece — mp4 + webm (+ GIFs); `renders/hundred/` holds all 100 engine pieces |
 | `3d/BRAND-INTRO.md` | The 12s brand ident: storyboard, audio cues, 20s/12s/5s/2s cutdowns |
 | `3d/record-renders.js` · `3d/record-hundred.js` | Headless recording pipeline (Playwright + ffmpeg) |
-
-## The Shop (store design)
-
-The storefront for the prints. *Get posterized. Limited possessions.*
-
-```bash
-python3 -m http.server 4488
-# then open:
-#   http://localhost:4488/shop.html   ← The Shop — storefront design
-```
-
-| Path | What it holds |
-|------|---------------|
-| `shop.html` + `shop.jsx` | **The Shop storefront design** — filterable print grid (The Collection / Street / Portraits / The Court / Celebration), edition copy, cart, on-brand chrome |
-| `products/` | **The store catalog** — 30 launch prints, Shopify-ready |
-| `products/aa-001…aa-030.png` | Titled print images, numbered for the drop |
-| `products/products.csv` | Shopify product import (titles, descriptions, editions) |
-| `campaign/LAUNCH-CAMPAIGN-DRAFT.md` | Store launch copy — product template, hero lines, CTAs |
 
 ## Repository map
 
