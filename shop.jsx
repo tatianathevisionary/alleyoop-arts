@@ -86,9 +86,10 @@ function Shop() {
           <span className="mono-label" style={{ marginLeft: 2 }}>Shop</span>
         </div>
         <nav>
-          <a href="gallery.html">The Collection</a>
+          <a href="index.html">Home</a>
+          <a href="gallery.html">Gallery</a>
           <a href="shop.html">Shop</a>
-          <a href="3d/gallery-space.html">The Gallery — Live</a>
+          <a href="blog.html">Blog</a>
           <a href="about.html">About</a>
           <a href="contact.html">Contact</a>
         </nav>
