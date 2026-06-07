@@ -59,9 +59,9 @@ function About() {
         </div>
         <nav>
           <a href="#story">Story</a>
-          <a href="#make">What we make</a>
           <a href="gallery.html">The Collection</a>
-          <a href="brand.html">Brand</a>
+          <a href="shop.html">Shop</a>
+          <a href="3d/gallery-space.html">The Gallery — Live</a>
         </nav>
         <div className="modeswitch" role="group" aria-label="Mode">
           <button data-on={mode === "cream" ? "1" : "0"} onClick={() => setMode("cream")}>Cream</button>

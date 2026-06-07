@@ -66,6 +66,9 @@ label.lab{ display:block; font-size:12px; font-weight:600; letter-spacing:.12em;
 @media (max-width:860px){ .grid2{ grid-template-columns:1fr; } .grid3{ grid-template-columns:1fr; } }
 @media (max-width:680px){ .grid4{ grid-template-columns:repeat(2,1fr); } }
 
+.hero3d img{ transition:transform .6s cubic-bezier(.2,.7,.2,1); }
+a:hover .hero3d img{ transform:scale(1.025); }
+
 .rise{ opacity:0; transform:translateY(18px); }
 .rise.in{ opacity:1; transform:none; transition:opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
 @media (prefers-reduced-motion:reduce){ .rise{ opacity:1; transform:none; } }

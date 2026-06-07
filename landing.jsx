@@ -62,15 +62,20 @@ function Landing() {
               is the one play you can't run alone.
             </p>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-              <a className="btn btn-accent" href="gallery.html">Explore the collection →</a>
+              <a className="btn btn-accent" href="shop.html">Shop the collection →</a>
               <a className="btn btn-ghost" href="about.html">Our story</a>
             </div>
           </div>
         </div>
         <div className="wrap rise" style={{ marginTop: "clamp(36px,5vw,60px)" }}>
-          <div className="imground" style={{ aspectRatio: "21/9" }}>
-            <img src="art/15-slam.png" alt="Slam — from the Alleyoop Arts collection" style={{ objectPosition: "center 30%" }} />
-          </div>
+          <a href="3d/gallery-space.html" style={{ display: "block", position: "relative", textDecoration: "none" }} aria-label="Enter the Mootion Gallery — the gallery for the game, now in motion">
+            <div className="imground hero3d" style={{ aspectRatio: "2270/1220" }}>
+              <img src="art/hero-mootion-gallery.png" alt="The Mootion Gallery — the gallery for the game, now in motion" />
+            </div>
+            <span style={{ position: "absolute", top: 18, right: 18, display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(14,14,14,.55)", color: "#F2E9C7", border: "1px solid rgba(242,233,199,.45)", borderRadius: 999, padding: "9px 16px", fontSize: 12, fontWeight: 700, letterSpacing: ".14em", textTransform: "uppercase", backdropFilter: "blur(6px)" }}>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#EE9933" }} /> Enter the gallery →
+            </span>
+          </a>
         </div>
       </section>
 
@@ -155,10 +160,11 @@ function Landing() {
             Alleyoop Arts is a Canadian basketball art and culture brand. Founded by Damion
             Rashford, a former college player who came back to the game through art.
           </p>
-          <nav style={{ display: "flex", gap: 22, marginTop: 6 }}>
+          <nav style={{ display: "flex", gap: 22, marginTop: 6, flexWrap: "wrap", justifyContent: "center" }}>
             <a href="gallery.html" style={{ fontSize: 13, fontWeight: 600, color: "var(--fg-dim)", textDecoration: "none" }}>The Collection</a>
+            <a href="shop.html" style={{ fontSize: 13, fontWeight: 600, color: "var(--fg-dim)", textDecoration: "none" }}>Shop</a>
             <a href="about.html" style={{ fontSize: 13, fontWeight: 600, color: "var(--fg-dim)", textDecoration: "none" }}>About</a>
-            <a href="brand.html" style={{ fontSize: 13, fontWeight: 600, color: "var(--fg-dim)", textDecoration: "none" }}>Brand</a>
+            <a href="3d/gallery-space.html" style={{ fontSize: 13, fontWeight: 600, color: "var(--fg-dim)", textDecoration: "none" }}>The Gallery — Live</a>
           </nav>
           <div className="mono-label" style={{ marginTop: 10 }}>The pass is the play · Est. 2026</div>
         </div>

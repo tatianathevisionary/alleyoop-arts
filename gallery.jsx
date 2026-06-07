@@ -79,9 +79,9 @@ function Gallery() {
         </div>
         <nav>
           <a href="#grid">Works</a>
-          <a href="#grid">Series</a>
-          <a href="brand.html">Brand</a>
-          <a href="#grid">Visit</a>
+          <a href="shop.html">Shop</a>
+          <a href="about.html">About</a>
+          <a href="3d/gallery-space.html">The Gallery — Live</a>
         </nav>
         <div className="modeswitch" role="group" aria-label="Mode">
           <button data-on={mode === "cream" ? "1" : "0"} onClick={() => setMode("cream")}>Cream</button>
@@ -161,7 +161,8 @@ function Gallery() {
               <div className="lb-field"><span>Year</span><span>{w.year}</span></div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 18 }}>
                 <div style={{ fontWeight: 800, fontSize: 26 }}>${w.price}<span style={{ fontSize: 13, fontWeight: 500, color: "rgba(242,233,199,.5)", marginLeft: 6 }}>CAD</span></div>
-                <button className="acquire" onClick={(e) => e.stopPropagation()}>Acquire print →</button>
+                <a className="acquire" style={{ textDecoration: "none" }} onClick={(e) => e.stopPropagation()}
+                  href={"shop.html#" + w.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}>Acquire print →</a>
               </div>
             </div>
           </div>
