@@ -44,14 +44,15 @@ python3 -m http.server 4488
 | `brand/IDENTITY.md` · `brand/VOICE.md` | Final v1 brand copy + how everything sounds |
 | `brand/BRAND.md` | Values, palette, logotype, content pillars |
 | `brand/BUSINESS-PLAN.md` · `brand/EXEC-SUMMARY.md` · `brand/SPONSORSHIP-DECK.md` | The plan |
-| `index.html` · `about.html` · `gallery.html` | The public site (root) |
+| `index.html` · `about.html` · `gallery.html` · `shop.html` | The public site (root) |
+| `shop.html` + `shop.jsx` | The Shop storefront design — filterable print grid (The Collection / Street / Portraits / The Court / Celebration), edition copy, cart |
+| `products/` + `products/products.csv` | 30 launch prints, Shopify-ready: titled PNGs (`aa-001`…`aa-030`) + import CSV |
 | `studio/` | Internal review tools — brand guidelines, launch plan, content studio |
 | `blog/` | Alleyoop magazine launch posts (drafts — quote-verified, see post 05) |
 | `campaign/` | Launch campaign draft — TV scripts, captions, ad copy, store copy |
 | `collections/basketball-posters/` | The original 156-poster catalog + style guide + upscaler |
 | `collections/jungle-gym/` | THE JUNGLE GYM — 20 new works, dawn to streetlights |
 | `art/` | The curated 30 |
-| `products/` | 30 launch prints as Shopify-ready catalog |
 | `logo/` | Standalone SVG exports — wordmark, monogram, favicon |
 | `scripts/` · `outputs/` | FLUX.2 generation pipelines + reproducible batches |
 
